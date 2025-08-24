@@ -9,10 +9,10 @@ export const iconMap: Record<string, Icon> = {
   moon: Icon.Moon,
   lightbulb: Icon.LightBulb,
   clock: Icon.Clock,
-  timer: Icon.Timer,
+  timer: Icon.Clock,
   xmarkcircle: Icon.XMarkCircle,
   sun: Icon.Sun,
-  palette: Icon.Palette,
+  palette: Icon.Circle,
 };
 
 export const getIconFromString = (iconString: string): Icon => {
