@@ -13,8 +13,7 @@ import {
 import { useState } from "react";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { queryClient } from "./lib/query-client";
-import { useDeviceState } from "./hooks/useDeviceState";
-import { useDeviceControl } from "./hooks/useAtombergQuery";
+import { useDeviceState, useDeviceControl } from "./hooks";
 import { hasValidCredentials } from "./utils/device-utils";
 import type { Preferences, Device } from "./types";
 
@@ -107,7 +106,9 @@ const DEVICE_COMMANDS: DeviceCommand[] = [
   },
 ];
 
-function DeviceCommandsContent(props: LaunchProps<{ arguments: DeviceCommandsArguments }> | { arguments: DeviceCommandsArguments }) {
+function DeviceCommandsContent(
+  props: LaunchProps<{ arguments: DeviceCommandsArguments }> | { arguments: DeviceCommandsArguments },
+) {
   const { deviceId, deviceName } = props.arguments;
   const preferences = getPreferenceValues<Preferences>();
   const { deviceState, isLoading, refreshDeviceState } = useDeviceState(deviceId, preferences);
@@ -129,7 +130,6 @@ function DeviceCommandsContent(props: LaunchProps<{ arguments: DeviceCommandsArg
     const deviceMock: Partial<Device> = { device_id: deviceId, name: deviceName };
     deviceControlMutation.mutate({ device: deviceMock as Device, command: command.command });
   };
-
 
   const getDeviceStateMetadata = () => {
     if (!deviceState) return null;
@@ -158,7 +158,6 @@ function DeviceCommandsContent(props: LaunchProps<{ arguments: DeviceCommandsArg
             color={deviceState.last_recorded_speed === 0 ? "#9E9E9E" : "#4CAF50"}
           />
         </Detail.Metadata.TagList>
-
 
         {deviceState.timer_hours > 0 && (
           <>
@@ -227,12 +226,7 @@ function DeviceCommandsContent(props: LaunchProps<{ arguments: DeviceCommandsArg
           title={command.title}
           subtitle={command.subtitle}
           icon={command.icon}
-          detail={
-            <List.Item.Detail
-              isLoading={isLoading}
-              metadata={getDeviceStateMetadata()}
-            />
-          }
+          detail={<List.Item.Detail isLoading={isLoading} metadata={getDeviceStateMetadata()} />}
           actions={
             <ActionPanel>
               <Action
@@ -250,7 +244,9 @@ function DeviceCommandsContent(props: LaunchProps<{ arguments: DeviceCommandsArg
   );
 }
 
-export default function DeviceCommands(props: LaunchProps<{ arguments: DeviceCommandsArguments }> | { arguments: DeviceCommandsArguments }) {
+export default function DeviceCommands(
+  props: LaunchProps<{ arguments: DeviceCommandsArguments }> | { arguments: DeviceCommandsArguments },
+) {
   return (
     <QueryClientProvider client={queryClient}>
       <DeviceCommandsContent {...props} />

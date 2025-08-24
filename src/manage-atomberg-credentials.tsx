@@ -16,7 +16,7 @@ import {
 import { useState, useEffect } from "react";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { queryClient } from "./lib/query-client";
-import { AtombergApiService } from "./services/atomberg-api";
+import { apiServiceManager } from "./services/api-service";
 import { STORAGE_KEYS } from "./constants";
 import type { Preferences } from "./types";
 
@@ -92,7 +92,7 @@ function CredentialsContent() {
 
       showToast({ title: "Testing Credentials", message: "Validating your API credentials..." });
 
-      const apiService = new AtombergApiService(preferences);
+      const apiService = apiServiceManager.getApiService(preferences);
       const now = new Date().toLocaleString();
       await LocalStorage.setItem("last-credential-test", now);
       setLastTestedAt(now);

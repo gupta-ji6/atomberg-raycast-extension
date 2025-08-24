@@ -3,7 +3,7 @@ import { QueryClientProvider } from "@tanstack/react-query";
 import { queryClient } from "./lib/query-client";
 import { DeviceItem } from "./components/DeviceItem";
 import { CredentialsRequiredEmptyView, NoDevicesEmptyView } from "./components/EmptyStates";
-import { useAtombergDevices } from "./hooks/useAtombergDevices";
+import { useAtombergDevices } from "./hooks";
 import { groupDevicesByRoom, getSortedRooms, hasValidCredentials } from "./utils/device-utils";
 import type { Preferences } from "./types";
 
