@@ -14,6 +14,8 @@ import {
   Toast,
 } from "@raycast/api";
 import { useState, useEffect } from "react";
+import { QueryClientProvider } from "@tanstack/react-query";
+import { queryClient } from "./lib/query-client";
 import { AtombergApiService } from "./services/atomberg-api";
 import { STORAGE_KEYS } from "./constants";
 import type { Preferences } from "./types";
@@ -25,7 +27,7 @@ interface CredentialInfo {
   isValid: boolean;
 }
 
-export default function Command() {
+function CredentialsContent() {
   const [credentials, setCredentials] = useState<CredentialInfo[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [lastTestedAt, setLastTestedAt] = useState<string | null>(null);
@@ -269,5 +271,13 @@ export default function Command() {
         />
       )}
     </List>
+  );
+}
+
+export default function Command() {
+  return (
+    <QueryClientProvider client={queryClient}>
+      <CredentialsContent />
+    </QueryClientProvider>
   );
 }

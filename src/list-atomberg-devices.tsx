@@ -1,11 +1,13 @@
 import { List, getPreferenceValues, openExtensionPreferences } from "@raycast/api";
+import { QueryClientProvider } from "@tanstack/react-query";
+import { queryClient } from "./lib/query-client";
 import { DeviceItem } from "./components/DeviceItem";
 import { CredentialsRequiredEmptyView, NoDevicesEmptyView } from "./components/EmptyStates";
 import { useAtombergDevices } from "./hooks/useAtombergDevices";
 import { groupDevicesByRoom, getSortedRooms, hasValidCredentials } from "./utils/device-utils";
 import type { Preferences } from "./types";
 
-export default function Command() {
+function DeviceListContent() {
   const preferences = getPreferenceValues<Preferences>();
   const { devices, isLoading, refreshDevices, toggleDevice } = useAtombergDevices(preferences);
 
@@ -42,5 +44,13 @@ export default function Command() {
         ))
       )}
     </List>
+  );
+}
+
+export default function Command() {
+  return (
+    <QueryClientProvider client={queryClient}>
+      <DeviceListContent />
+    </QueryClientProvider>
   );
 }

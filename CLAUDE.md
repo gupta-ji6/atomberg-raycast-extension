@@ -19,7 +19,8 @@ npm run publish      # Publish to Raycast Store
 ## Architecture Overview
 
 ### Core Structure
-- **Two main commands**: 
+
+- **Two main commands**:
   - `list-atomberg-devices` (device listing with push navigation to device controls)
   - `manage-atomberg-credentials` (credential management)
 - **Internal navigation**: Device control interface accessed via Action.Push from device list
@@ -30,21 +31,29 @@ npm run publish      # Publish to Raycast Store
 ### Key Components
 
 **API Service Layer (`src/services/atomberg-api.ts`)**
+
 - `AtombergApiService` class handles all Atomberg API interactions
 - Manages JWT token lifecycle (24-hour expiry with 5-minute refresh buffer)
 - Implements proper authentication flow using API key + refresh token → access token
 - Handles device listing, control commands, device state fetching, and error management
 
-**State Management Hooks**
-- `useAtombergDevices` (`src/hooks/useAtombergDevices.ts`): Manages device listing and operations
-- `useDeviceState` (`src/hooks/useDeviceState.ts`): Manages individual device state and real-time updates
-- Uses `useMemo` to prevent infinite re-rendering of API service instances
+**State Management with TanStack Query v5**
+
+- `useAtombergQuery` (`src/hooks/useAtombergQuery.ts`): Core query hooks with smart caching
+  - `useDevicesList`: Device list with 5-minute cache, perfect for infrequent changes
+  - `useDeviceState`: Real-time device state with 10-second cache + 30s background refetch
+  - `useDeviceControl`: Mutations with optimistic updates and cache invalidation
+- `useAtombergDevices`: Wrapper hook for device list operations
+- `useDeviceState`: Wrapper hook for individual device state management
+- Query client setup with intelligent retry logic and error handling
 
 **UI Components (`src/components/`)**
+
 - `DeviceItem`: Individual device list item with control actions
 - `EmptyStates`: Reusable empty state views for different scenarios
 
 **Utility Layer (`src/utils/device-utils.ts`)**
+
 - Pure functions for data transformation (grouping devices by room)
 - Credential validation utilities
 
@@ -61,6 +70,7 @@ npm run publish      # Publish to Raycast Store
 **Base URL**: `https://api.developer.atomberg-iot.com/v1`
 
 **Key Endpoints**:
+
 - `GET /get_access_token` - Authentication (requires refresh token + API key)
 - `GET /get_list_of_devices` - Device listing
 - `GET /get_device_state` - Get real-time device state and status
@@ -69,14 +79,14 @@ npm run publish      # Publish to Raycast Store
 **Response Patterns**:
 All API responses follow `{ status: "Success", message: {...} }` structure.
 
-### Data Flow
+### Data Flow with Smart Caching
 
-1. **Device Listing**: `useAtombergDevices` → `AtombergApiService.fetchDevices()` → UI components
-2. **Device Control**: UI action → `AtombergApiService.controlDevice()` → API call
-3. **Device State**: `useDeviceState` → `AtombergApiService.fetchDeviceState()` → List detail panel with metadata
-4. **Command Execution**: User selects command → `executeCommand()` → `AtombergApiService.controlDevice()` → Auto-refresh state
-5. **Room Grouping**: Raw devices → `groupDevicesByRoom()` → `List.Section` components
-6. **Navigation**: Device list → Action.Push → Device commands view with seamless navigation
+1. **Device Listing**: `useDevicesList` → TanStack Query (5min cache) → `AtombergApiService.fetchDevices()` → UI components
+2. **Device State**: `useDeviceState` → TanStack Query (10s cache, 30s refetch) → `AtombergApiService.fetchDeviceState()` → Real-time UI updates
+3. **Command Execution**: User action → `useDeviceControl` mutation → Optimistic updates → Cache invalidation → Background refetch
+4. **Room Grouping**: Cached devices → `groupDevicesByRoom()` → `List.Section` components
+5. **Navigation**: Device list → Action.Push → Device commands view with seamless navigation
+6. **Error Handling**: TanStack Query retry logic → Automatic auth error detection → User feedback
 
 ### Configuration Management
 
@@ -102,12 +112,14 @@ All API responses follow `{ status: "Success", message: {...} }` structure.
 - Left panel shows executable commands, right panel shows real-time device state
 - Real-time device state includes power, speed, sleep mode, LED, timers, and timestamps
 - Navigation between views uses Raycast's Action.Push for seamless internal navigation
+- TanStack Query v5 provides intelligent caching, background updates, and error handling
 
 ## Device Commands Interface
 
 The split-panel device commands view provides:
 
 **Left Panel - Command List:**
+
 - **Power Control**: Toggle device on/off
 - **Speed Control**: Increase/decrease fan speed by 1 level
 - **Feature Toggles**: Oscillation, sleep mode, LED indicators
@@ -115,12 +127,43 @@ The split-panel device commands view provides:
 - **Interactive Execution**: Click any command to execute immediately
 
 **Right Panel - Live Device State:**
+
 - **Connection status** (online/offline) with color-coded indicators  
 - **Power state** and current fan speed level
 - **Active features** (sleep mode, LED status)
 - **Timer information** (remaining hours and elapsed time)
 - **Device metadata** (ID, last update timestamp, brightness, color)
 - **Auto-refresh** after command execution with 1-second delay
+
+## Smart Caching Strategy
+
+**TanStack Query v5 Integration:**
+
+**Device List Caching (5 minutes)**
+
+- Long cache duration since device configuration rarely changes
+- Background refetch disabled for optimal performance
+- Perfect for device names, rooms, and static metadata
+
+**Device State Caching (10 seconds + 30s background refetch)**
+
+- Short cache with frequent updates for real-time feel
+- Background refetch every 30 seconds when component is mounted
+- Refetch on window focus for immediate updates when user returns
+
+**Command Mutations with Optimistic Updates**
+
+- Immediate UI feedback before API response
+- Automatic cache invalidation after successful commands
+- Smart retry logic that skips auth errors
+- Background state refetch to sync with actual device state
+
+**Performance Benefits:**
+
+- Reduced API calls and improved response times
+- Offline-first experience with cached data
+- Automatic background synchronization
+- Smart error handling and retry logic
 
 ## Future Enhancements
 

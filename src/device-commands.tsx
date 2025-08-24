@@ -11,9 +11,11 @@ import {
   Toast,
 } from "@raycast/api";
 import { useState } from "react";
+import { QueryClientProvider } from "@tanstack/react-query";
+import { queryClient } from "./lib/query-client";
 import { useDeviceState } from "./hooks/useDeviceState";
+import { useDeviceControl } from "./hooks/useAtombergQuery";
 import { hasValidCredentials } from "./utils/device-utils";
-import { AtombergApiService } from "./services/atomberg-api";
 import type { Preferences, Device } from "./types";
 
 interface DeviceCommandsArguments {
@@ -105,10 +107,11 @@ const DEVICE_COMMANDS: DeviceCommand[] = [
   },
 ];
 
-export default function DeviceCommands(props: LaunchProps<{ arguments: DeviceCommandsArguments }> | { arguments: DeviceCommandsArguments }) {
+function DeviceCommandsContent(props: LaunchProps<{ arguments: DeviceCommandsArguments }> | { arguments: DeviceCommandsArguments }) {
   const { deviceId, deviceName } = props.arguments;
   const preferences = getPreferenceValues<Preferences>();
   const { deviceState, isLoading, refreshDeviceState } = useDeviceState(deviceId, preferences);
+  const deviceControlMutation = useDeviceControl(preferences);
   const [selectedCommand, setSelectedCommand] = useState<DeviceCommand | null>(null);
 
   const credentialsValid = hasValidCredentials(preferences.apiKey, preferences.refreshToken);
@@ -123,25 +126,8 @@ export default function DeviceCommands(props: LaunchProps<{ arguments: DeviceCom
       return;
     }
 
-    try {
-      showToast({
-        title: "Executing Command",
-        message: `${command.title} for ${deviceName}`,
-      });
-
-      const apiService = new AtombergApiService(preferences);
-      const deviceMock: Partial<Device> = { device_id: deviceId, name: deviceName };
-      const success = await apiService.controlDevice(deviceMock as Device, command.command);
-
-      if (success) {
-        // Refresh device state after command execution
-        setTimeout(() => {
-          refreshDeviceState();
-        }, 1000);
-      }
-    } catch (error) {
-      console.error("Command execution error:", error);
-    }
+    const deviceMock: Partial<Device> = { device_id: deviceId, name: deviceName };
+    deviceControlMutation.mutate({ device: deviceMock as Device, command: command.command });
   };
 
 
@@ -261,5 +247,13 @@ export default function DeviceCommands(props: LaunchProps<{ arguments: DeviceCom
         />
       ))}
     </List>
+  );
+}
+
+export default function DeviceCommands(props: LaunchProps<{ arguments: DeviceCommandsArguments }> | { arguments: DeviceCommandsArguments }) {
+  return (
+    <QueryClientProvider client={queryClient}>
+      <DeviceCommandsContent {...props} />
+    </QueryClientProvider>
   );
 }
