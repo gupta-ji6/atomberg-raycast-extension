@@ -2,7 +2,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { showToast, Toast } from "@raycast/api";
 import { apiServiceManager } from "../../services/api-service";
 import { queryKeys } from "../../lib/query-client";
-import type { Device, Preferences, DeviceCommand, DeviceState } from "../../types";
+import type { Device, Preferences, DeviceCommand, DeviceState, CommandParameters } from "../../types";
 
 export function useDeviceControl(preferences: Preferences) {
   const queryClient = useQueryClient();
@@ -13,12 +13,14 @@ export function useDeviceControl(preferences: Preferences) {
       device,
       command,
       deviceState,
+      parameters,
     }: {
       device: Device;
       command: string | DeviceCommand;
       deviceState?: DeviceState;
+      parameters?: CommandParameters;
     }) => {
-      return apiService.controlDevice(device, command, deviceState);
+      return apiService.controlDevice(device, command, deviceState, parameters);
     },
     onMutate: async ({
       device,
@@ -27,6 +29,7 @@ export function useDeviceControl(preferences: Preferences) {
       device: Device;
       command: string | DeviceCommand;
       deviceState?: DeviceState;
+      parameters?: CommandParameters;
     }) => {
       const commandName = typeof command === "string" ? command : command.command;
       showToast({
@@ -36,7 +39,15 @@ export function useDeviceControl(preferences: Preferences) {
     },
     onSuccess: async (
       success: boolean,
-      { device, command }: { device: Device; command: string | DeviceCommand; deviceState?: DeviceState },
+      {
+        device,
+        command,
+      }: {
+        device: Device;
+        command: string | DeviceCommand;
+        deviceState?: DeviceState;
+        parameters?: CommandParameters;
+      },
     ) => {
       if (success) {
         const commandName = typeof command === "string" ? command : command.command;
@@ -60,7 +71,15 @@ export function useDeviceControl(preferences: Preferences) {
     },
     onError: (
       error: Error,
-      { device, command }: { device: Device; command: string | DeviceCommand; deviceState?: DeviceState },
+      {
+        device,
+        command,
+      }: {
+        device: Device;
+        command: string | DeviceCommand;
+        deviceState?: DeviceState;
+        parameters?: CommandParameters;
+      },
     ) => {
       const commandName = typeof command === "string" ? command : command.command;
       console.error("Device control error:", error);

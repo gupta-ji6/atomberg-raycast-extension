@@ -15,6 +15,7 @@ import type {
   DeviceStateResponse,
   Preferences,
   DeviceCommand,
+  CommandParameters,
 } from "../types";
 
 export class AtombergApiService {
@@ -140,7 +141,12 @@ export class AtombergApiService {
     }
   }
 
-  async controlDevice(device: Device, command: string | DeviceCommand, deviceState?: DeviceState): Promise<boolean> {
+  async controlDevice(
+    device: Device,
+    command: string | DeviceCommand,
+    deviceState?: DeviceState,
+    parameters?: CommandParameters,
+  ): Promise<boolean> {
     try {
       const accessToken = await this.getValidAccessToken();
       if (!accessToken) {
@@ -152,7 +158,7 @@ export class AtombergApiService {
         return false;
       }
 
-      const commandPayload = this.buildCommandPayload(command, device.device_id, deviceState);
+      const commandPayload = this.buildCommandPayload(command, device.device_id, deviceState, parameters);
       const commandDescription = this.getCommandDescription(commandPayload);
 
       console.log("Command payload:", commandPayload);
@@ -202,6 +208,7 @@ export class AtombergApiService {
     command: string | DeviceCommand,
     deviceId: string,
     deviceState?: DeviceState,
+    parameters?: CommandParameters,
   ): { device_id: string; command: Record<string, string | number | boolean> } {
     const basePayload = { device_id: deviceId };
 
@@ -235,6 +242,23 @@ export class AtombergApiService {
           return { ...basePayload, command: { brightnessDelta: 10 } };
         case "brightness_down":
           return { ...basePayload, command: { brightnessDelta: -10 } };
+        case "set_speed":
+          if (!parameters?.speed_level) throw new Error("Speed level parameter required for set_speed command");
+          return { ...basePayload, command: { speed: parameters.speed_level } };
+        case "set_timer":
+          if (!parameters?.timer_hours) throw new Error("Timer hours parameter required for set_timer command");
+          return { ...basePayload, command: { timer: parameters.timer_hours } };
+        case "set_brightness":
+          if (!parameters?.brightness_level)
+            throw new Error("Brightness level parameter required for set_brightness command");
+          return { ...basePayload, command: { brightness: parameters.brightness_level } };
+        case "set_brightness_delta":
+          if (!parameters?.brightness_delta)
+            throw new Error("Brightness delta parameter required for set_brightness_delta command");
+          return { ...basePayload, command: { brightnessDelta: parameters.brightness_delta } };
+        case "set_color":
+          if (!parameters?.color) throw new Error("Color parameter required for set_color command");
+          return { ...basePayload, command: { light_mode: parameters.color } };
         default:
           throw new Error(`Unknown simple command: ${command}`);
       }

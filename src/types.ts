@@ -57,6 +57,8 @@ export interface DeviceStateResponse {
 
 export type DevicesByRoom = Record<string, Device[]>;
 
+export type CommandParameters = Record<string, string | number | boolean>;
+
 export type DeviceCommandType =
   | "toggle"
   | "speed_up"

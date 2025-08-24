@@ -9,6 +9,8 @@ import {
   LaunchProps,
   showToast,
   Toast,
+  Form,
+  useNavigation,
 } from "@raycast/api";
 import { useState } from "react";
 import { QueryClientProvider } from "@tanstack/react-query";
@@ -16,7 +18,7 @@ import { queryClient } from "./lib/query-client";
 import { useDeviceState, useDeviceControl } from "./hooks";
 import { hasValidCredentials } from "./utils/device-utils";
 import { getIconFromString } from "./utils/icon-utils";
-import type { Preferences, Device, DeviceCommandDefinition } from "./types";
+import type { Preferences, Device, DeviceCommandDefinition, CommandParameters } from "./types";
 import { getAvailableCommandsForDevice, getCommandById } from "./config/device-commands";
 
 interface DeviceCommandsArguments {
@@ -24,6 +26,78 @@ interface DeviceCommandsArguments {
   deviceName: string;
   deviceModel?: string;
   deviceSeries?: string;
+}
+
+interface SetSpeedFormProps {
+  deviceName: string;
+  onSubmit: (values: { speedLevel: string }) => void;
+}
+
+interface SetTimerFormProps {
+  deviceName: string;
+  onSubmit: (values: { timerHours: string }) => void;
+}
+
+function SetSpeedForm({ deviceName, onSubmit }: SetSpeedFormProps) {
+  const { pop } = useNavigation();
+
+  return (
+    <Form
+      navigationTitle={`Set Speed Level - ${deviceName}`}
+      actions={
+        <ActionPanel>
+          <Action.SubmitForm
+            title="Set Speed"
+            icon={Icon.Gauge}
+            onSubmit={(values) => {
+              onSubmit(values as { speedLevel: string });
+              pop();
+            }}
+          />
+          <Action title="Cancel" icon={Icon.XMarkCircle} onAction={pop} />
+        </ActionPanel>
+      }
+    >
+      <Form.Dropdown id="speedLevel" title="Speed Level" placeholder="Select speed level">
+        <Form.Dropdown.Item value="1" title="Level 1 (Lowest)" icon={Icon.Gauge} />
+        <Form.Dropdown.Item value="2" title="Level 2" icon={Icon.Gauge} />
+        <Form.Dropdown.Item value="3" title="Level 3" icon={Icon.Gauge} />
+        <Form.Dropdown.Item value="4" title="Level 4" icon={Icon.Gauge} />
+        <Form.Dropdown.Item value="5" title="Level 5" icon={Icon.Gauge} />
+        <Form.Dropdown.Item value="6" title="Level 6 (Highest)" icon={Icon.Gauge} />
+      </Form.Dropdown>
+    </Form>
+  );
+}
+
+function SetTimerForm({ deviceName, onSubmit }: SetTimerFormProps) {
+  const { pop } = useNavigation();
+
+  return (
+    <Form
+      navigationTitle={`Set Custom Timer - ${deviceName}`}
+      actions={
+        <ActionPanel>
+          <Action.SubmitForm
+            title="Set Timer"
+            icon={Icon.Timer}
+            onSubmit={(values) => {
+              onSubmit(values as { timerHours: string });
+              pop();
+            }}
+          />
+          <Action title="Cancel" icon={Icon.XMarkCircle} onAction={pop} />
+        </ActionPanel>
+      }
+    >
+      <Form.Dropdown id="timerHours" title="Timer Duration" placeholder="Select timer duration">
+        <Form.Dropdown.Item value="1" title="1 Hour" icon={Icon.Clock} />
+        <Form.Dropdown.Item value="2" title="2 Hours" icon={Icon.Clock} />
+        <Form.Dropdown.Item value="3" title="3 Hours" icon={Icon.Clock} />
+        <Form.Dropdown.Item value="4" title="4 Hours" icon={Icon.Clock} />
+      </Form.Dropdown>
+    </Form>
+  );
 }
 
 function DeviceCommandsContent(
@@ -34,6 +108,7 @@ function DeviceCommandsContent(
   const { deviceState, isLoading, refreshDeviceState } = useDeviceState(deviceId, preferences);
   const deviceControlMutation = useDeviceControl(preferences);
   const [selectedCommand, setSelectedCommand] = useState<DeviceCommandDefinition | null>(null);
+  const { push } = useNavigation();
 
   // Create a device object for command filtering
   const deviceMock: Device = {
@@ -50,7 +125,7 @@ function DeviceCommandsContent(
 
   const credentialsValid = hasValidCredentials(preferences.apiKey, preferences.refreshToken);
 
-  const executeCommand = async (command: DeviceCommandDefinition) => {
+  const executeCommand = async (command: DeviceCommandDefinition, parameters?: CommandParameters) => {
     if (!credentialsValid) {
       showToast({
         style: Toast.Style.Failure,
@@ -78,6 +153,7 @@ function DeviceCommandsContent(
         device: deviceMock as Device,
         command: command.command,
         deviceState: deviceState || undefined,
+        parameters,
       },
       {
         onSuccess: () => {
@@ -88,6 +164,37 @@ function DeviceCommandsContent(
         },
       },
     );
+  };
+
+  const handleSetSpeedSubmit = (values: { speedLevel: string }) => {
+    const command = getCommandById("set-speed");
+    if (command) {
+      executeCommand(command, { speed_level: parseInt(values.speedLevel, 10) });
+    }
+  };
+
+  const handleSetTimerSubmit = (values: { timerHours: string }) => {
+    const command = getCommandById("set-timer");
+    if (command) {
+      executeCommand(command, { timer_hours: parseInt(values.timerHours, 10) });
+    }
+  };
+
+  const handleCommandAction = (command: DeviceCommandDefinition) => {
+    // Check if command has parameters - if so, show form
+    if (command.parameters) {
+      if (command.id === "set-speed") {
+        push(<SetSpeedForm deviceName={deviceName} onSubmit={handleSetSpeedSubmit} />);
+      } else if (command.id === "set-timer") {
+        push(<SetTimerForm deviceName={deviceName} onSubmit={handleSetTimerSubmit} />);
+      } else {
+        // For other parametrized commands, execute directly for now
+        executeCommand(command);
+      }
+    } else {
+      // Execute simple commands directly
+      executeCommand(command);
+    }
   };
 
   const getDeviceStateMetadata = () => {
@@ -198,8 +305,8 @@ function DeviceCommandsContent(
             actions={
               <ActionPanel>
                 <Action
-                  title={`Execute: ${command.title}`}
-                  onAction={() => executeCommand(command)}
+                  title={command.parameters ? `Configure: ${command.title}` : `Execute: ${command.title}`}
+                  onAction={() => handleCommandAction(command)}
                   icon={getIconFromString(command.icon)}
                 />
                 <Action title="Refresh Device State" onAction={refreshDeviceState} icon={Icon.ArrowClockwise} />
