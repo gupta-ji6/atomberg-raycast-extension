@@ -15,109 +15,42 @@ import { QueryClientProvider } from "@tanstack/react-query";
 import { queryClient } from "./lib/query-client";
 import { useDeviceState, useDeviceControl } from "./hooks";
 import { hasValidCredentials } from "./utils/device-utils";
-import type { Preferences, Device } from "./types";
+import { getIconFromString } from "./utils/icon-utils";
+import type { Preferences, Device, DeviceCommandDefinition } from "./types";
+import { getAvailableCommandsForDevice, getCommandById } from "./config/device-commands";
 
 interface DeviceCommandsArguments {
   deviceId: string;
   deviceName: string;
+  deviceModel?: string;
+  deviceSeries?: string;
 }
-
-interface DeviceCommand {
-  id: string;
-  title: string;
-  subtitle: string;
-  icon: Icon;
-  command: string;
-  description: string;
-}
-
-const DEVICE_COMMANDS: DeviceCommand[] = [
-  {
-    id: "power-toggle",
-    title: "Toggle Power",
-    subtitle: "Turn device on/off",
-    icon: Icon.Power,
-    command: "toggle",
-    description: "Toggle the power state of the device",
-  },
-  {
-    id: "speed-up",
-    title: "Increase Speed",
-    subtitle: "Increase fan speed by 1 level",
-    icon: Icon.Plus,
-    command: "speed_up",
-    description: "Increase the fan speed by one level",
-  },
-  {
-    id: "speed-down",
-    title: "Decrease Speed",
-    subtitle: "Decrease fan speed by 1 level",
-    icon: Icon.Minus,
-    command: "speed_down",
-    description: "Decrease the fan speed by one level",
-  },
-  {
-    id: "oscillation-toggle",
-    title: "Toggle Oscillation",
-    subtitle: "Turn oscillation on/off",
-    icon: Icon.Repeat,
-    command: "oscillation_toggle",
-    description: "Toggle the oscillation feature of the fan",
-  },
-  {
-    id: "sleep-mode",
-    title: "Toggle Sleep Mode",
-    subtitle: "Activate/deactivate sleep mode",
-    icon: Icon.Moon,
-    command: "sleep_mode",
-    description: "Toggle sleep mode for quieter operation",
-  },
-  {
-    id: "led-toggle",
-    title: "Toggle LED",
-    subtitle: "Turn LED indicators on/off",
-    icon: Icon.LightBulb,
-    command: "led_toggle",
-    description: "Toggle the LED indicators on the device",
-  },
-  {
-    id: "timer-1h",
-    title: "Set 1 Hour Timer",
-    subtitle: "Auto turn off after 1 hour",
-    icon: Icon.Clock,
-    command: "timer_1h",
-    description: "Set device to automatically turn off after 1 hour",
-  },
-  {
-    id: "timer-2h",
-    title: "Set 2 Hour Timer",
-    subtitle: "Auto turn off after 2 hours",
-    icon: Icon.Clock,
-    command: "timer_2h",
-    description: "Set device to automatically turn off after 2 hours",
-  },
-  {
-    id: "timer-off",
-    title: "Cancel Timer",
-    subtitle: "Remove any active timer",
-    icon: Icon.XMarkCircle,
-    command: "timer_off",
-    description: "Cancel any currently active timer",
-  },
-];
 
 function DeviceCommandsContent(
   props: LaunchProps<{ arguments: DeviceCommandsArguments }> | { arguments: DeviceCommandsArguments },
 ) {
-  const { deviceId, deviceName } = props.arguments;
+  const { deviceId, deviceName, deviceModel, deviceSeries } = props.arguments;
   const preferences = getPreferenceValues<Preferences>();
   const { deviceState, isLoading, refreshDeviceState } = useDeviceState(deviceId, preferences);
   const deviceControlMutation = useDeviceControl(preferences);
-  const [selectedCommand, setSelectedCommand] = useState<DeviceCommand | null>(null);
+  const [selectedCommand, setSelectedCommand] = useState<DeviceCommandDefinition | null>(null);
+
+  // Create a device object for command filtering
+  const deviceMock: Device = {
+    device_id: deviceId,
+    name: deviceName,
+    model: deviceModel || "Unknown",
+    series: deviceSeries || "R1",
+    color: "white",
+    room: "Unknown",
+    metadata: { ssid: "" },
+  };
+
+  const availableCommands = getAvailableCommandsForDevice(deviceMock);
 
   const credentialsValid = hasValidCredentials(preferences.apiKey, preferences.refreshToken);
 
-  const executeCommand = async (command: DeviceCommand) => {
+  const executeCommand = async (command: DeviceCommandDefinition) => {
     if (!credentialsValid) {
       showToast({
         style: Toast.Style.Failure,
@@ -127,8 +60,34 @@ function DeviceCommandsContent(
       return;
     }
 
+    if (
+      !deviceState &&
+      (command.command === "toggle" || command.command === "sleep_mode" || command.command === "led_toggle")
+    ) {
+      showToast({
+        style: Toast.Style.Failure,
+        title: "Device State Required",
+        message: "Please wait for device state to load before using toggle commands",
+      });
+      return;
+    }
+
     const deviceMock: Partial<Device> = { device_id: deviceId, name: deviceName };
-    deviceControlMutation.mutate({ device: deviceMock as Device, command: command.command });
+    deviceControlMutation.mutate(
+      {
+        device: deviceMock as Device,
+        command: command.command,
+        deviceState: deviceState || undefined,
+      },
+      {
+        onSuccess: () => {
+          // Additional device state refresh specifically for this component
+          setTimeout(() => {
+            refreshDeviceState();
+          }, 1500);
+        },
+      },
+    );
   };
 
   const getDeviceStateMetadata = () => {
@@ -214,32 +173,42 @@ function DeviceCommandsContent(
       isShowingDetail={true}
       selectedItemId={selectedCommand?.id}
       onSelectionChange={(id) => {
-        const command = DEVICE_COMMANDS.find((cmd) => cmd.id === id);
+        const command = getCommandById(id || "");
         setSelectedCommand(command || null);
       }}
       navigationTitle={`${deviceName} Controls`}
     >
-      {DEVICE_COMMANDS.map((command) => (
-        <List.Item
-          key={command.id}
-          id={command.id}
-          title={command.title}
-          subtitle={command.subtitle}
-          icon={command.icon}
-          detail={<List.Item.Detail isLoading={isLoading} metadata={getDeviceStateMetadata()} />}
-          actions={
-            <ActionPanel>
-              <Action
-                title={`Execute: ${command.title}`}
-                onAction={() => executeCommand(command)}
-                icon={command.icon}
-              />
-              <Action title="Refresh Device State" onAction={refreshDeviceState} icon={Icon.ArrowClockwise} />
-              <Action title="Open Extension Preferences" onAction={openExtensionPreferences} icon={Icon.Gear} />
-            </ActionPanel>
-          }
-        />
-      ))}
+      {availableCommands.map((command) => {
+        const isToggleCommand =
+          command.command === "toggle" || command.command === "sleep_mode" || command.command === "led_toggle";
+        const isCommandDisabled = isLoading || (isToggleCommand && !deviceState) || deviceControlMutation.isPending;
+
+        return (
+          <List.Item
+            key={command.id}
+            id={command.id}
+            title={command.title}
+            subtitle={
+              isCommandDisabled
+                ? `${command.subtitle} ${isLoading ? "(Loading device state...)" : deviceControlMutation.isPending ? "(Executing...)" : "(Waiting for device state)"}`
+                : command.subtitle
+            }
+            icon={getIconFromString(command.icon)}
+            detail={<List.Item.Detail isLoading={isLoading} metadata={getDeviceStateMetadata()} />}
+            actions={
+              <ActionPanel>
+                <Action
+                  title={`Execute: ${command.title}`}
+                  onAction={() => executeCommand(command)}
+                  icon={getIconFromString(command.icon)}
+                />
+                <Action title="Refresh Device State" onAction={refreshDeviceState} icon={Icon.ArrowClockwise} />
+                <Action title="Open Extension Preferences" onAction={openExtensionPreferences} icon={Icon.Gear} />
+              </ActionPanel>
+            }
+          />
+        );
+      })}
     </List>
   );
 }

@@ -31,6 +31,8 @@ export function DeviceItem({ device, onToggle, onRefresh, onOpenPreferences }: D
                 arguments={{
                   deviceId: device.device_id,
                   deviceName: device.name,
+                  deviceModel: device.model,
+                  deviceSeries: device.series,
                 }}
               />
             }

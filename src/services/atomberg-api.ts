@@ -14,6 +14,7 @@ import type {
   DeviceState,
   DeviceStateResponse,
   Preferences,
+  DeviceCommand,
 } from "../types";
 
 export class AtombergApiService {
@@ -139,7 +140,7 @@ export class AtombergApiService {
     }
   }
 
-  async controlDevice(device: Device, command = "toggle"): Promise<boolean> {
+  async controlDevice(device: Device, command: string | DeviceCommand, deviceState?: DeviceState): Promise<boolean> {
     try {
       const accessToken = await this.getValidAccessToken();
       if (!accessToken) {
@@ -151,19 +152,24 @@ export class AtombergApiService {
         return false;
       }
 
+      const commandPayload = this.buildCommandPayload(command, device.device_id, deviceState);
+      const commandDescription = this.getCommandDescription(commandPayload);
+
+      console.log("Command payload:", commandPayload);
+
       showToast({
         title: "Controlling Device",
-        message: `Sending command to ${device.name}`,
+        message: `Sending ${commandDescription} to ${device.name}`,
       });
 
-      const response = await fetch(`${ATOMBERG_API_BASE_URL}${ENDPOINTS.DEVICE_COMMAND}/${device.device_id}/command`, {
+      const response = await fetch(`${ATOMBERG_API_BASE_URL}${ENDPOINTS.SEND_COMMAND}`, {
         method: "POST",
         headers: {
           Authorization: `Bearer ${accessToken}`,
           "x-api-key": this.preferences.apiKey || "",
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ command }),
+        body: JSON.stringify(commandPayload),
       });
 
       if (!response.ok) {
@@ -177,7 +183,7 @@ export class AtombergApiService {
 
       showToast({
         title: "Command Sent",
-        message: `Successfully sent command to ${device.name}`,
+        message: `Successfully sent ${commandDescription} to ${device.name}`,
       });
 
       return true;
@@ -190,6 +196,107 @@ export class AtombergApiService {
       });
       return false;
     }
+  }
+
+  private buildCommandPayload(
+    command: string | DeviceCommand,
+    deviceId: string,
+    deviceState?: DeviceState,
+  ): { device_id: string; command: Record<string, string | number | boolean> } {
+    const basePayload = { device_id: deviceId };
+
+    if (typeof command === "string") {
+      switch (command) {
+        case "toggle":
+          if (!deviceState) throw new Error("Device state required for toggle command");
+          return { ...basePayload, command: { power: !deviceState.power } };
+        case "speed_up":
+          return { ...basePayload, command: { speedDelta: 1 } };
+        case "speed_down":
+          return { ...basePayload, command: { speedDelta: -1 } };
+        // Note: oscillation_toggle command does not exist in API documentation - removed
+        case "sleep_mode":
+          if (!deviceState) throw new Error("Device state required for sleep mode toggle");
+          return { ...basePayload, command: { sleep: !deviceState.sleep_mode } };
+        case "led_toggle":
+          if (!deviceState) throw new Error("Device state required for LED toggle");
+          return { ...basePayload, command: { led: !deviceState.led } };
+        case "timer_1h":
+          return { ...basePayload, command: { timer: 1 } };
+        case "timer_2h":
+          return { ...basePayload, command: { timer: 2 } };
+        case "timer_3h":
+          return { ...basePayload, command: { timer: 3 } };
+        case "timer_6h":
+          return { ...basePayload, command: { timer: 4 } };
+        case "timer_off":
+          return { ...basePayload, command: { timer: 0 } };
+        case "brightness_up":
+          return { ...basePayload, command: { brightnessDelta: 10 } };
+        case "brightness_down":
+          return { ...basePayload, command: { brightnessDelta: -10 } };
+        default:
+          throw new Error(`Unknown simple command: ${command}`);
+      }
+    }
+
+    switch (command.command) {
+      case "set_speed":
+        return {
+          ...basePayload,
+          command: { speed: command.speed_level },
+        };
+      case "set_timer":
+        return {
+          ...basePayload,
+          command: { timer: command.timer_hours },
+        };
+      case "set_brightness":
+        return {
+          ...basePayload,
+          command: { brightness: command.brightness_level },
+        };
+      case "set_brightness_delta":
+        return {
+          ...basePayload,
+          command: { brightnessDelta: command.brightness_delta },
+        };
+      case "set_color":
+        return {
+          ...basePayload,
+          command: { light_mode: command.color },
+        };
+      default:
+        throw new Error(`Unknown parametrized command: ${command.command}`);
+    }
+  }
+
+  private getCommandDescription(payload: {
+    device_id: string;
+    command: Record<string, string | number | boolean>;
+  }): string {
+    const cmd = payload.command;
+
+    if ("power" in cmd) return "power toggle";
+    if ("speedDelta" in cmd) {
+      const delta = cmd.speedDelta as number;
+      return delta > 0 ? "speed increase" : "speed decrease";
+    }
+    if ("speed" in cmd) return `speed level ${cmd.speed}`;
+    if ("sleep" in cmd) return "sleep mode toggle";
+    if ("led" in cmd) return "LED toggle";
+    if ("timer" in cmd) {
+      const hours = cmd.timer as number;
+      return hours === 0 ? "timer cancellation" : `${hours} hour timer`;
+    }
+    if ("brightness" in cmd) return `brightness level ${cmd.brightness}`;
+    if ("brightnessDelta" in cmd) {
+      const delta = cmd.brightnessDelta as number;
+      return delta > 0 ? "brightness increase" : "brightness decrease";
+    }
+    if ("light_mode" in cmd) return `color ${cmd.light_mode}`;
+
+    return "command";
   }
 
   async fetchDeviceState(deviceId: string): Promise<DeviceState | null> {

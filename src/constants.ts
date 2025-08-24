@@ -4,7 +4,7 @@ export const ENDPOINTS = {
   GET_ACCESS_TOKEN: "/get_access_token",
   GET_DEVICES: "/get_list_of_devices",
   GET_DEVICE_STATE: "/get_device_state",
-  DEVICE_COMMAND: "/devices",
+  SEND_COMMAND: "/send_command",
 } as const;
 
 export const STORAGE_KEYS = {
