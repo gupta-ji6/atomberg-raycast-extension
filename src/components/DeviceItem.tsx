@@ -1,4 +1,5 @@
 import { List, ActionPanel, Action, Icon } from "@raycast/api";
+import DeviceCommands from "../device-commands";
 import type { Device } from "../types";
 
 interface DeviceItemProps {
@@ -23,14 +24,16 @@ export function DeviceItem({ device, onToggle, onRefresh, onOpenPreferences }: D
       icon={Icon.ComputerChip}
       actions={
         <ActionPanel>
-          <Action.OpenInBrowser
+          <Action.Push
             title="Open Device Commands"
-            url={`raycast://extensions/gupta_ji/atomberg/device-commands?arguments=${encodeURIComponent(
-              JSON.stringify({
-                deviceId: device.device_id,
-                deviceName: device.name,
-              }),
-            )}`}
+            target={
+              <DeviceCommands
+                arguments={{
+                  deviceId: device.device_id,
+                  deviceName: device.name,
+                }}
+              />
+            }
             icon={Icon.List}
           />
           <Action title="Toggle Device" onAction={() => onToggle(device)} icon={Icon.Power} />

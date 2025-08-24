@@ -105,7 +105,7 @@ const DEVICE_COMMANDS: DeviceCommand[] = [
   },
 ];
 
-export default function DeviceCommands(props: LaunchProps<{ arguments: DeviceCommandsArguments }>) {
+export default function DeviceCommands(props: LaunchProps<{ arguments: DeviceCommandsArguments }> | { arguments: DeviceCommandsArguments }) {
   const { deviceId, deviceName } = props.arguments;
   const preferences = getPreferenceValues<Preferences>();
   const { deviceState, isLoading, refreshDeviceState } = useDeviceState(deviceId, preferences);

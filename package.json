@@ -22,28 +22,6 @@
       "description": "View current API credentials and reset them if needed",
       "mode": "view",
       "icon": "extension-icon.png"
-    },
-    {
-      "name": "device-commands",
-      "title": "Device Commands",
-      "subtitle": "Control individual Atomberg device with command list",
-      "description": "Interactive device control interface with command list and real-time state",
-      "mode": "view",
-      "icon": "extension-icon.png",
-      "arguments": [
-        {
-          "name": "deviceId",
-          "placeholder": "Device ID",
-          "type": "text",
-          "required": true
-        },
-        {
-          "name": "deviceName",
-          "placeholder": "Device Name",
-          "type": "text",
-          "required": true
-        }
-      ]
     }
   ],
   "preferences": [

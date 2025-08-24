@@ -19,10 +19,10 @@ npm run publish      # Publish to Raycast Store
 ## Architecture Overview
 
 ### Core Structure
-- **Three main commands**: 
-  - `list-atomberg-devices` (device listing/control)
+- **Two main commands**: 
+  - `list-atomberg-devices` (device listing with push navigation to device controls)
   - `manage-atomberg-credentials` (credential management)
-  - `device-commands` (interactive device control with command list and state panel)
+- **Internal navigation**: Device control interface accessed via Action.Push from device list
 - **Service-oriented architecture** with clear separation of concerns
 - **Custom React hooks** for state management and API interaction
 - **Centralized configuration** through constants and types
@@ -76,7 +76,7 @@ All API responses follow `{ status: "Success", message: {...} }` structure.
 3. **Device State**: `useDeviceState` → `AtombergApiService.fetchDeviceState()` → List detail panel with metadata
 4. **Command Execution**: User selects command → `executeCommand()` → `AtombergApiService.controlDevice()` → Auto-refresh state
 5. **Room Grouping**: Raw devices → `groupDevicesByRoom()` → `List.Section` components
-6. **Navigation**: Device list → Action.OpenInBrowser → Device commands view with split interface
+6. **Navigation**: Device list → Action.Push → Device commands view with seamless navigation
 
 ### Configuration Management
 
@@ -101,7 +101,7 @@ All API responses follow `{ status: "Success", message: {...} }` structure.
 - Device commands view uses Raycast's List with detail panel for split interface
 - Left panel shows executable commands, right panel shows real-time device state
 - Real-time device state includes power, speed, sleep mode, LED, timers, and timestamps
-- Navigation between views uses Raycast's URL scheme with encoded arguments
+- Navigation between views uses Raycast's Action.Push for seamless internal navigation
 
 ## Device Commands Interface
 
