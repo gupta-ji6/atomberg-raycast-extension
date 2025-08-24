@@ -23,7 +23,17 @@ export function DeviceItem({ device, onToggle, onRefresh, onOpenPreferences }: D
       icon={Icon.ComputerChip}
       actions={
         <ActionPanel>
-          <Action title="Control Device" onAction={() => onToggle(device)} icon={Icon.Power} />
+          <Action.OpenInBrowser
+            title="Open Device Commands"
+            url={`raycast://extensions/gupta_ji/atomberg/device-commands?arguments=${encodeURIComponent(
+              JSON.stringify({
+                deviceId: device.device_id,
+                deviceName: device.name,
+              }),
+            )}`}
+            icon={Icon.List}
+          />
+          <Action title="Toggle Device" onAction={() => onToggle(device)} icon={Icon.Power} />
           <Action title="Refresh Devices" onAction={onRefresh} icon={Icon.ArrowClockwise} />
           <Action title="Open Extension Preferences" onAction={onOpenPreferences} icon={Icon.Gear} />
         </ActionPanel>

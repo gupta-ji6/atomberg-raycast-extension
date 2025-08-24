@@ -19,7 +19,10 @@ npm run publish      # Publish to Raycast Store
 ## Architecture Overview
 
 ### Core Structure
-- **Two main commands**: `list-atomberg-devices` (device listing/control) and `manage-atomberg-credentials` (credential management)
+- **Three main commands**: 
+  - `list-atomberg-devices` (device listing/control)
+  - `manage-atomberg-credentials` (credential management)
+  - `device-commands` (interactive device control with command list and state panel)
 - **Service-oriented architecture** with clear separation of concerns
 - **Custom React hooks** for state management and API interaction
 - **Centralized configuration** through constants and types
@@ -30,12 +33,12 @@ npm run publish      # Publish to Raycast Store
 - `AtombergApiService` class handles all Atomberg API interactions
 - Manages JWT token lifecycle (24-hour expiry with 5-minute refresh buffer)
 - Implements proper authentication flow using API key + refresh token → access token
-- Handles device listing, control commands, and error management
+- Handles device listing, control commands, device state fetching, and error management
 
-**State Management (`src/hooks/useAtombergDevices.ts`)**
-- Custom hook that encapsulates device state and API operations
-- Uses `useMemo` to prevent infinite re-rendering of API service
-- Manages loading states and device refresh logic
+**State Management Hooks**
+- `useAtombergDevices` (`src/hooks/useAtombergDevices.ts`): Manages device listing and operations
+- `useDeviceState` (`src/hooks/useDeviceState.ts`): Manages individual device state and real-time updates
+- Uses `useMemo` to prevent infinite re-rendering of API service instances
 
 **UI Components (`src/components/`)**
 - `DeviceItem`: Individual device list item with control actions
@@ -60,6 +63,7 @@ npm run publish      # Publish to Raycast Store
 **Key Endpoints**:
 - `GET /get_access_token` - Authentication (requires refresh token + API key)
 - `GET /get_list_of_devices` - Device listing
+- `GET /get_device_state` - Get real-time device state and status
 - `POST /devices/{id}/command` - Device control
 
 **Response Patterns**:
@@ -69,7 +73,10 @@ All API responses follow `{ status: "Success", message: {...} }` structure.
 
 1. **Device Listing**: `useAtombergDevices` → `AtombergApiService.fetchDevices()` → UI components
 2. **Device Control**: UI action → `AtombergApiService.controlDevice()` → API call
-3. **Room Grouping**: Raw devices → `groupDevicesByRoom()` → `List.Section` components
+3. **Device State**: `useDeviceState` → `AtombergApiService.fetchDeviceState()` → List detail panel with metadata
+4. **Command Execution**: User selects command → `executeCommand()` → `AtombergApiService.controlDevice()` → Auto-refresh state
+5. **Room Grouping**: Raw devices → `groupDevicesByRoom()` → `List.Section` components
+6. **Navigation**: Device list → Action.OpenInBrowser → Device commands view with split interface
 
 ### Configuration Management
 
@@ -91,3 +98,33 @@ All API responses follow `{ status: "Success", message: {...} }` structure.
 - All API calls require both API key (header) and access token (Bearer auth)
 - Device rooms are used for UI organization with alphabetical sorting
 - Extension supports light/dark theme through proper icon assets
+- Device commands view uses Raycast's List with detail panel for split interface
+- Left panel shows executable commands, right panel shows real-time device state
+- Real-time device state includes power, speed, sleep mode, LED, timers, and timestamps
+- Navigation between views uses Raycast's URL scheme with encoded arguments
+
+## Device Commands Interface
+
+The split-panel device commands view provides:
+
+**Left Panel - Command List:**
+- **Power Control**: Toggle device on/off
+- **Speed Control**: Increase/decrease fan speed by 1 level
+- **Feature Toggles**: Oscillation, sleep mode, LED indicators
+- **Timer Management**: Set 1h/2h timers or cancel existing timers
+- **Interactive Execution**: Click any command to execute immediately
+
+**Right Panel - Live Device State:**
+- **Connection status** (online/offline) with color-coded indicators  
+- **Power state** and current fan speed level
+- **Active features** (sleep mode, LED status)
+- **Timer information** (remaining hours and elapsed time)
+- **Device metadata** (ID, last update timestamp, brightness, color)
+- **Auto-refresh** after command execution with 1-second delay
+
+## Future Enhancements
+
+- **UDP State Reading**: Direct device communication to avoid API rate limits
+- **Device Controls**: Interactive controls for speed, oscillation, timers
+- **Real-time Updates**: WebSocket or polling for live state changes
+- **Device Grouping**: Advanced filtering and organization options

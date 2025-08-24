@@ -34,4 +34,25 @@ export interface DeviceControlResponse {
   message?: string;
 }
 
+export interface DeviceState {
+  device_id: string;
+  is_online: boolean;
+  power: boolean;
+  last_recorded_speed: number;
+  timer_hours: number;
+  timer_time_elapsed_mins: number;
+  ts_epoch_seconds: number;
+  last_recorded_brightness: number;
+  last_recorded_color: string;
+  sleep_mode: boolean;
+  led: boolean;
+}
+
+export interface DeviceStateResponse {
+  status: string;
+  message: {
+    device_state: DeviceState[];
+  };
+}
+
 export type DevicesByRoom = Record<string, Device[]>;

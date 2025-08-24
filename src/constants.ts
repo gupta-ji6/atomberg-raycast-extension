@@ -3,6 +3,7 @@ export const ATOMBERG_API_BASE_URL = "https://api.developer.atomberg-iot.com/v1"
 export const ENDPOINTS = {
   GET_ACCESS_TOKEN: "/get_access_token",
   GET_DEVICES: "/get_list_of_devices",
+  GET_DEVICE_STATE: "/get_device_state",
   DEVICE_COMMAND: "/devices",
 } as const;
 

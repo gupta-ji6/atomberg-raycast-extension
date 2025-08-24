@@ -6,7 +6,15 @@ import {
   TOKEN_EXPIRY_HOURS,
   TOKEN_REFRESH_BUFFER_MS,
 } from "../constants";
-import type { AccessTokenResponse, AtombergApiResponse, Device, DeviceControlResponse, Preferences } from "../types";
+import type {
+  AccessTokenResponse,
+  AtombergApiResponse,
+  Device,
+  DeviceControlResponse,
+  DeviceState,
+  DeviceStateResponse,
+  Preferences,
+} from "../types";
 
 export class AtombergApiService {
   constructor(private preferences: Preferences) {}
@@ -181,6 +189,48 @@ export class AtombergApiService {
         message: `Failed to control ${device.name}`,
       });
       return false;
+    }
+  }
+
+  async fetchDeviceState(deviceId: string): Promise<DeviceState | null> {
+    try {
+      const accessToken = await this.getValidAccessToken();
+      if (!accessToken) {
+        return null;
+      }
+
+      const response = await fetch(`${ATOMBERG_API_BASE_URL}${ENDPOINTS.GET_DEVICE_STATE}?device_id=${deviceId}`, {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          "x-api-key": this.preferences.apiKey || "",
+          "Content-Type": "application/json",
+        },
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.log("Device state API error:", response.status, errorText);
+        throw new Error(`API request failed: ${response.status} - ${errorText}`);
+      }
+
+      const data = (await response.json()) as DeviceStateResponse;
+      console.log("Device state response:", JSON.stringify(data, null, 2));
+
+      if (data.status !== "Success" || !data.message?.device_state) {
+        throw new Error("Failed to fetch device state - invalid response format");
+      }
+
+      return data.message.device_state?.[0] || null;
+    } catch (error) {
+      console.error("Error fetching device state:", error);
+      showToast({
+        style: Toast.Style.Failure,
+        title: "Failed to Load Device State",
+        message: error instanceof Error ? error.message : "Unknown error occurred",
+      });
+
+      return null;
     }
   }
 }
