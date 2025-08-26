@@ -1,8 +1,8 @@
 {
   "$schema": "https://www.raycast.com/schemas/extension.json",
-  "name": "atomberg",
-  "title": "Atomberg",
-  "description": "Opeate your Atomberg applicanes from Raycast easily & securely.",
+  "name": "atomberg-raycast-extension",
+  "title": "Atomberg - Smart Home Control",
+  "description": "Control your Atomberg smart fans and appliances directly from Raycast",
   "icon": "extension-icon.png",
   "author": "gupta_ji",
   "license": "MIT",
@@ -10,7 +10,7 @@
     {
       "name": "list-atomberg-devices",
       "title": "My Atomberg Devices",
-      "subtitle": "View and control your Atomberg appliances", 
+      "subtitle": "View and control your Atomberg appliances",
       "description": "List and control your Atomberg smart fans and appliances",
       "mode": "view",
       "icon": "extension-icon.png"
@@ -34,13 +34,17 @@
       "placeholder": "Enter your Atomberg API Key"
     },
     {
-      "name": "refreshToken", 
+      "name": "refreshToken",
       "title": "Refresh Token",
       "description": "Your Atomberg Refresh Token from the developer portal",
       "type": "password",
       "required": false,
       "placeholder": "Enter your Atomberg Refresh Token"
     }
+  ],
+  "categories": [
+    "Productivity",
+    "Smart Home"
   ],
   "dependencies": {
     "@raycast/api": "^1.102.5",
@@ -56,8 +60,8 @@
     "typescript": "^5.8.2"
   },
   "scripts": {
-    "build": "ray build",
-    "dev": "ray develop",
+    "build": "NODE_ENV=production ray build",
+    "dev": "NODE_ENV=development ray develop",
     "fix-lint": "ray lint --fix",
     "lint": "ray lint",
     "prepublishOnly": "echo \"\\n\\nIt seems like you are trying to publish the Raycast extension to npm.\\n\\nIf you did intend to publish it to npm, remove the \\`prepublishOnly\\` script and rerun \\`npm publish\\` again.\\nIf you wanted to publish it to the Raycast Store instead, use \\`npm run publish\\` instead.\\n\\n\" && exit 1",
