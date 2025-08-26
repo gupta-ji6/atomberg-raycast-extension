@@ -15,7 +15,7 @@ import type { Device, Preferences, DeviceCommand, DeviceState, CommandParameters
  * @returns React Query mutation object with device control functionality
  *
  * @remarks
- * - Automatically shows toast notifications for command execution status
+ * - Shows immediate feedback when command execution starts
  * - Invalidates and refetches device state after successful commands
  * - Includes a 1-second delay before refetching to ensure API state updates
  * - Provides comprehensive error handling with user-friendly messages
@@ -60,7 +60,6 @@ export function useDeviceControl(preferences: Preferences) {
       success: boolean,
       {
         device,
-        command,
       }: {
         device: Device;
         command: string | DeviceCommand;
@@ -69,13 +68,6 @@ export function useDeviceControl(preferences: Preferences) {
       },
     ) => {
       if (success) {
-        const commandName = typeof command === "string" ? command : command.command;
-        showToast({
-          title: "Command Executed",
-          message: `Successfully executed ${commandName} on ${device.name}`,
-          style: Toast.Style.Success,
-        });
-
         // Invalidate and refetch device state after a short delay to ensure API state is updated
         await queryClient.invalidateQueries({
           queryKey: queryKeys.deviceState(device.device_id, preferences),

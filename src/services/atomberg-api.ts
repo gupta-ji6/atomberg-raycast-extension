@@ -239,8 +239,8 @@ export class AtombergApiService {
       console.log("Command payload:", commandPayload);
 
       showToast({
-        title: "Controlling Device...",
-        message: `Sending ${commandDescription} to ${device.name}`,
+        title: "Sending Command...",
+        message: `Executing ${commandDescription} on ${device.name}`,
         style: Toast.Style.Animated,
       });
 
@@ -264,18 +264,39 @@ export class AtombergApiService {
       console.log("Device control response:", responseData);
 
       showToast({
-        title: "Command Sent",
-        message: `Successfully sent ${commandDescription} to ${device.name}`,
+        title: this.getCommandTitle(commandPayload),
+        message: this.getCommandMessage(commandPayload, device.name),
         style: Toast.Style.Success,
       });
 
       return true;
     } catch (error) {
       console.error("Error controlling device:", error);
+
+      // Provide more specific error messages based on error type
+      let errorTitle = "Command Failed";
+      let errorMessage = `Unable to control ${device.name}`;
+
+      if (error instanceof Error) {
+        if (error.message.includes("Device state required")) {
+          errorTitle = "Device State Required";
+          errorMessage = `${device.name} needs to be online to perform this action`;
+        } else if (error.message.includes("parameter required")) {
+          errorTitle = "Missing Parameter";
+          errorMessage = `Required parameter missing for ${device.name}`;
+        } else if (error.message.includes("Unknown command")) {
+          errorTitle = "Unsupported Command";
+          errorMessage = `This command is not supported by ${device.name}`;
+        } else if (error.message.includes("Command failed:")) {
+          errorTitle = "Network Error";
+          errorMessage = `Failed to communicate with ${device.name}`;
+        }
+      }
+
       showToast({
         style: Toast.Style.Failure,
-        title: "Error",
-        message: `Failed to control ${device.name}`,
+        title: errorTitle,
+        message: errorMessage,
       });
       return false;
     }
@@ -426,6 +447,116 @@ export class AtombergApiService {
     if ("light_mode" in cmd) return `color ${cmd.light_mode}`;
 
     return "command";
+  }
+
+  /**
+   * Generates a user-friendly title for a command payload
+   *
+   * This private method creates specific, contextual titles for different
+   * command types to make toast notifications more informative.
+   *
+   * @param payload - The command payload to generate title for
+   * @returns User-friendly title for the command
+   *
+   * @private
+   */
+  private getCommandTitle(payload: { device_id: string; command: Record<string, string | number | boolean> }): string {
+    const cmd = payload.command;
+
+    if ("power" in cmd) {
+      const isPowerOn = cmd.power as boolean;
+      return isPowerOn ? "Fan Turned On" : "Fan Turned Off";
+    }
+    if ("speedDelta" in cmd) {
+      const delta = cmd.speedDelta as number;
+      return delta > 0 ? "Speed Increased" : "Speed Decreased";
+    }
+    if ("speed" in cmd) return "Speed Set";
+    if ("sleep" in cmd) {
+      const isSleepMode = cmd.sleep as boolean;
+      return isSleepMode ? "Sleep Mode Enabled" : "Sleep Mode Disabled";
+    }
+    if ("led" in cmd) {
+      const isLedOn = cmd.led as boolean;
+      return isLedOn ? "LED Light Turned On" : "LED Light Turned Off";
+    }
+    if ("timer" in cmd) {
+      const hours = cmd.timer as number;
+      return hours === 0 ? "Timer Cancelled" : "Timer Set";
+    }
+    if ("brightness" in cmd) return "Brightness Set";
+    if ("brightnessDelta" in cmd) {
+      const delta = cmd.brightnessDelta as number;
+      return delta > 0 ? "Brightness Increased" : "Brightness Decreased";
+    }
+    if ("light_mode" in cmd) return "Color Changed";
+
+    return "Command Executed";
+  }
+
+  /**
+   * Generates a user-friendly message for a command payload
+   *
+   * This private method creates specific, contextual messages for different
+   * command types to provide clear feedback about what was accomplished.
+   *
+   * @param payload - The command payload to generate message for
+   * @param deviceName - The name of the device being controlled
+   * @returns User-friendly message for the command
+   *
+   * @private
+   */
+  private getCommandMessage(
+    payload: {
+      device_id: string;
+      command: Record<string, string | number | boolean>;
+    },
+    deviceName: string,
+  ): string {
+    const cmd = payload.command;
+
+    if ("power" in cmd) {
+      const isPowerOn = cmd.power as boolean;
+      return isPowerOn ? `${deviceName} is now running` : `${deviceName} has been turned off`;
+    }
+    if ("speedDelta" in cmd) {
+      const delta = cmd.speedDelta as number;
+      return delta > 0 ? `${deviceName} speed increased by 1 level` : `${deviceName} speed decreased by 1 level`;
+    }
+    if ("speed" in cmd) {
+      const speed = cmd.speed as number;
+      return `${deviceName} speed set to level ${speed}`;
+    }
+    if ("sleep" in cmd) {
+      const isSleepMode = cmd.sleep as boolean;
+      return isSleepMode ? `${deviceName} sleep mode activated` : `${deviceName} sleep mode deactivated`;
+    }
+    if ("led" in cmd) {
+      const isLedOn = cmd.led as boolean;
+      return isLedOn ? `${deviceName} LED light is now on` : `${deviceName} LED light is now off`;
+    }
+    if ("timer" in cmd) {
+      const hours = cmd.timer as number;
+      return hours === 0
+        ? `${deviceName} timer has been cancelled`
+        : `${deviceName} timer set for ${hours} hour${hours > 1 ? "s" : ""}`;
+    }
+    if ("brightness" in cmd) {
+      const brightness = cmd.brightness as number;
+      return `${deviceName} brightness set to ${brightness}%`;
+    }
+    if ("brightnessDelta" in cmd) {
+      const delta = cmd.brightnessDelta as number;
+      return delta > 0
+        ? `${deviceName} brightness increased by ${Math.abs(delta)}%`
+        : `${deviceName} brightness decreased by ${Math.abs(delta)}%`;
+    }
+    if ("light_mode" in cmd) {
+      const color = cmd.light_mode as string;
+      return `${deviceName} color changed to ${color}`;
+    }
+
+    return `Command sent to ${deviceName}`;
   }
 
   /**
