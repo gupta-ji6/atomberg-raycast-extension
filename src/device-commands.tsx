@@ -176,7 +176,9 @@ function DeviceCommandsContent(
         />
 
         <Detail.Metadata.TagList title="Active Features">
-          {deviceState.sleep_mode && <Detail.Metadata.TagList.Item text="Sleep Mode" icon={Icon.Moon} color={Color.Blue} />}
+          {deviceState.sleep_mode && (
+            <Detail.Metadata.TagList.Item text="Sleep Mode" icon={Icon.Moon} color={Color.Blue} />
+          )}
           {deviceState.led && <Detail.Metadata.TagList.Item text="LED" icon={Icon.LightBulb} color={Color.Purple} />}
           {!deviceState.sleep_mode && !deviceState.led && (
             <Detail.Metadata.TagList.Item text="None Active" color={Color.SecondaryText} />

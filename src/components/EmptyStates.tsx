@@ -12,10 +12,10 @@ interface EmptyStateProps {
 
 /**
  * Empty state component displayed when API credentials are not configured
- * 
+ *
  * @param props - The component props
  * @param props.onOpenPreferences - Callback function to open extension preferences
- * 
+ *
  * @returns A List.EmptyView component prompting user to configure credentials
  */
 export function CredentialsRequiredEmptyView({ onOpenPreferences }: Pick<EmptyStateProps, "onOpenPreferences">) {
@@ -35,11 +35,11 @@ export function CredentialsRequiredEmptyView({ onOpenPreferences }: Pick<EmptySt
 
 /**
  * Empty state component displayed when no devices are found
- * 
+ *
  * @param props - The component props
  * @param props.onAction - Optional callback function for refresh action
  * @param props.onOpenPreferences - Callback function to open extension preferences
- * 
+ *
  * @returns A List.EmptyView component with refresh and preferences actions
  */
 export function NoDevicesEmptyView({ onAction, onOpenPreferences }: EmptyStateProps) {

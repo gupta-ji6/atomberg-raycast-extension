@@ -18,13 +18,13 @@ interface DeviceItemProps {
 
 /**
  * DeviceItem component that renders a single device in the devices list
- * 
+ *
  * @param props - The component props
  * @param props.device - The device object containing device information
  * @param props.onToggle - Callback function to toggle device state
  * @param props.onRefresh - Callback function to refresh the devices list
  * @param props.onOpenPreferences - Callback function to open extension preferences
- * 
+ *
  * @returns A List.Item component representing the device with actions
  */
 export function DeviceItem({ device, onToggle, onRefresh, onOpenPreferences }: DeviceItemProps) {
@@ -33,12 +33,16 @@ export function DeviceItem({ device, onToggle, onRefresh, onOpenPreferences }: D
       key={device.device_id}
       title={device.name}
       subtitle={`${device.series} ${device.model} • ${device.color}`}
-      accessories={device?.metadata?.ssid ? [
-        {
-          icon: Icon.Wifi,
-          tooltip: `Connected to ${device.metadata.ssid}`,
-        },
-      ] : undefined}
+      accessories={
+        device?.metadata?.ssid
+          ? [
+              {
+                icon: Icon.Wifi,
+                tooltip: `Connected to ${device.metadata.ssid}`,
+              },
+            ]
+          : undefined
+      }
       icon={Icon.ComputerChip}
       actions={
         <ActionPanel>

@@ -6,6 +6,7 @@ import {
   TOKEN_EXPIRY_HOURS,
   TOKEN_REFRESH_BUFFER_MS,
 } from "../constants";
+import { logger } from "../utils/logger";
 import type {
   AccessTokenResponse,
   AtombergApiResponse,
@@ -54,9 +55,9 @@ export class AtombergApiService {
   async getAccessToken(): Promise<string | null> {
     try {
       const endpoint = `${ATOMBERG_API_BASE_URL}${ENDPOINTS.GET_ACCESS_TOKEN}`;
-      console.log("Attempting authentication with endpoint:", endpoint);
-      console.log("Using refresh token length:", this.preferences.refreshToken?.length || 0);
-      console.log("Using API key length:", this.preferences.apiKey?.length || 0);
+      logger.info("Attempting authentication with endpoint:", endpoint);
+      logger.info("Using refresh token length:", this.preferences.refreshToken?.length || 0);
+      logger.info("Using API key length:", this.preferences.apiKey?.length || 0);
 
       const response = await fetch(endpoint, {
         method: "GET",
@@ -67,17 +68,17 @@ export class AtombergApiService {
         },
       });
 
-      console.log("Auth response status:", response.status);
-      console.log("Auth response headers:", Object.fromEntries(response.headers.entries()));
+      logger.info("Auth response status:", response.status);
+      logger.info("Auth response headers:", Object.fromEntries(response.headers.entries()));
 
       if (!response.ok) {
         const errorText = await response.text();
-        console.log("Auth error response:", errorText);
+        logger.error("Auth error response:", errorText);
         throw new Error(`Authentication failed: ${response.status} - ${errorText}`);
       }
 
       const data = (await response.json()) as AccessTokenResponse;
-      console.log("Access token response data:", data);
+      logger.info("Access token response data:", data);
 
       if (data.status === "Success" && data.message?.access_token) {
         const expiryTime = Date.now() + TOKEN_EXPIRY_HOURS * 60 * 60 * 1000;
@@ -87,11 +88,11 @@ export class AtombergApiService {
 
         return data.message.access_token;
       } else {
-        console.log("Invalid response structure:", data);
+        logger.error("Invalid response structure:", data);
         throw new Error("Invalid response format from API");
       }
     } catch (error) {
-      console.error("Error getting access token:", error);
+      logger.error("Error getting access token:", error);
       showToast({
         style: Toast.Style.Failure,
         title: "Authentication Error",
@@ -127,7 +128,7 @@ export class AtombergApiService {
 
       return await this.getAccessToken();
     } catch (error) {
-      console.error("Error managing access token:", error);
+      logger.error("Error managing access token:", error);
       return await this.getAccessToken();
     }
   }
@@ -170,12 +171,12 @@ export class AtombergApiService {
 
       if (!response.ok) {
         const errorText = await response.text();
-        console.log("Device list API error:", response.status, errorText);
+        logger.error("Device list API error:", response.status, errorText);
         throw new Error(`API request failed: ${response.status} - ${errorText}`);
       }
 
       const data = (await response.json()) as AtombergApiResponse;
-      console.log("Device list response:", JSON.stringify(data, null, 2));
+      logger.info("Device list response:", JSON.stringify(data, null, 2));
 
       if (data.status !== "Success" || !data.message?.devices_list) {
         throw new Error("Failed to fetch devices - invalid response format");
@@ -190,7 +191,7 @@ export class AtombergApiService {
       });
       return devices;
     } catch (error) {
-      console.error("Error fetching devices:", error);
+      logger.error("Error fetching devices:", error);
       showToast({
         style: Toast.Style.Failure,
         title: "Failed to Load Devices",
@@ -236,7 +237,7 @@ export class AtombergApiService {
       const commandPayload = this.buildCommandPayload(command, device.device_id, deviceState, parameters);
       const commandDescription = this.getCommandDescription(commandPayload);
 
-      console.log("Command payload:", commandPayload);
+      logger.info("Command payload:", commandPayload);
 
       showToast({
         title: "Sending Command...",
@@ -256,12 +257,12 @@ export class AtombergApiService {
 
       if (!response.ok) {
         const errorText = await response.text();
-        console.log("Device control error:", response.status, errorText);
+        logger.error("Device control error:", response.status, errorText);
         throw new Error(`Command failed: ${response.status} - ${errorText}`);
       }
 
       const responseData = (await response.json()) as DeviceControlResponse;
-      console.log("Device control response:", responseData);
+      logger.info("Device control response:", responseData);
 
       showToast({
         title: this.getCommandTitle(commandPayload),
@@ -271,7 +272,7 @@ export class AtombergApiService {
 
       return true;
     } catch (error) {
-      console.error("Error controlling device:", error);
+      logger.error("Error controlling device:", error);
 
       // Provide more specific error messages based on error type
       let errorTitle = "Command Failed";
@@ -589,12 +590,12 @@ export class AtombergApiService {
 
       if (!response.ok) {
         const errorText = await response.text();
-        console.log("Device state API error:", response.status, errorText);
+        logger.error("Device state API error:", response.status, errorText);
         throw new Error(`API request failed: ${response.status} - ${errorText}`);
       }
 
       const data = (await response.json()) as DeviceStateResponse;
-      console.log("Device state response:", JSON.stringify(data, null, 2));
+      logger.info("Device state response:", JSON.stringify(data, null, 2));
 
       if (data.status !== "Success" || !data.message?.device_state) {
         throw new Error("Failed to fetch device state - invalid response format");
@@ -602,7 +603,7 @@ export class AtombergApiService {
 
       return data.message.device_state?.[0] || null;
     } catch (error) {
-      console.error("Error fetching device state:", error);
+      logger.error("Error fetching device state:", error);
       showToast({
         style: Toast.Style.Failure,
         title: "Failed to Load Device State",

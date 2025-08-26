@@ -2,6 +2,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { showToast, Toast } from "@raycast/api";
 import { apiServiceManager } from "../../services/api-service";
 import { queryKeys } from "../../lib/query-client";
+import { logger } from "../../utils/logger";
 import type { Device, Preferences, DeviceCommand, DeviceState, CommandParameters } from "../../types";
 
 /**
@@ -95,7 +96,7 @@ export function useDeviceControl(preferences: Preferences) {
       },
     ) => {
       const commandName = typeof command === "string" ? command : command.command;
-      console.error("Device control error:", error);
+      logger.error("Device control error:", error);
       showToast({
         style: Toast.Style.Failure,
         title: "Command Failed",

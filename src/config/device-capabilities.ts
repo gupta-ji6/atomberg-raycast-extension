@@ -1,4 +1,5 @@
 import type { Device } from "../types";
+import { logger } from "../utils/logger";
 
 /**
  * Interface defining the capabilities supported by Atomberg devices
@@ -197,7 +198,7 @@ export function getDeviceCapabilities(device: Device): DeviceCapabilities {
     key.toLowerCase().endsWith(`_${normalizedSeries}`),
   );
   if (seriesOnlyKey) {
-    console.log(`Using series-based fallback for ${device.model} ${device.series}: ${seriesOnlyKey}`);
+    logger.info(`Using series-based fallback for ${device.model} ${device.series}: ${seriesOnlyKey}`);
     return DEVICE_CAPABILITIES[seriesOnlyKey];
   }
 

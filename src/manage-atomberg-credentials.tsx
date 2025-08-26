@@ -18,6 +18,7 @@ import { QueryClientProvider } from "@tanstack/react-query";
 import { queryClient } from "./lib/query-client";
 import { apiServiceManager } from "./services/api-service";
 import { STORAGE_KEYS } from "./constants";
+import { logger } from "./utils/logger";
 import type { Preferences } from "./types";
 
 interface CredentialInfo {
@@ -62,7 +63,7 @@ function CredentialsContent() {
 
         setCredentials(credentialData);
       } catch (error) {
-        console.error("Error loading credential info:", error);
+        logger.error("Error loading credential info:", error);
         showToast({
           style: Toast.Style.Failure,
           title: "Error",
@@ -90,7 +91,11 @@ function CredentialsContent() {
         return;
       }
 
-      showToast({ title: "Testing Credentials", message: "Validating your API credentials...", style: Toast.Style.Animated });
+      showToast({
+        title: "Testing Credentials",
+        message: "Validating your API credentials...",
+        style: Toast.Style.Animated,
+      });
 
       const apiService = apiServiceManager.getApiService(preferences);
       const now = new Date().toLocaleString();
@@ -106,7 +111,7 @@ function CredentialsContent() {
         });
       }
     } catch (error) {
-      console.error("Error testing credentials:", error);
+      logger.error("Error testing credentials:", error);
       showToast({
         style: Toast.Style.Failure,
         title: "Test Failed",
@@ -135,7 +140,7 @@ function CredentialsContent() {
         setLastTestedAt(null);
         showHUD("✅ Cached data cleared");
       } catch (error) {
-        console.error("Error clearing cached data:", error);
+        logger.error("Error clearing cached data:", error);
         showToast({
           style: Toast.Style.Failure,
           title: "Error",
@@ -150,7 +155,7 @@ function CredentialsContent() {
       await Clipboard.copy(credential.value);
       showHUD(`✅ ${credential.key} copied to clipboard`);
     } catch (error) {
-      console.error("Clipboard copy error:", error);
+      logger.error("Clipboard copy error:", error);
       showToast({
         style: Toast.Style.Failure,
         title: "Copy Failed",

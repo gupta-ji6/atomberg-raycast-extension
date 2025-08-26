@@ -1,6 +1,7 @@
 import { useDevicesList } from "./useDevicesList";
 import { useDeviceControl } from "./useDeviceControl";
 import { apiServiceManager } from "../../services/api-service";
+import { logger } from "../../utils/logger";
 import type { Device, Preferences } from "../../types";
 
 /**
@@ -47,7 +48,7 @@ export function useAtombergDevices(preferences: Preferences) {
         throw new Error("Failed to fetch device state");
       }
     } catch (error) {
-      console.error("Error toggling device:", error);
+      logger.error("Error toggling device:", error);
       // Fallback to old behavior if state fetch fails
       deviceControlMutation.mutate({ device, command: "toggle" });
     }
