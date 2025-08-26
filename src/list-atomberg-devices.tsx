@@ -21,28 +21,32 @@ function DeviceListContent() {
     );
   }
 
+  if (!devices || devices.length === 0) {
+    return (
+      <List>
+        <NoDevicesEmptyView onAction={refreshDevices} onOpenPreferences={openExtensionPreferences} />
+      </List>
+    );
+  }
+
   const devicesByRoom = groupDevicesByRoom(devices);
   const sortedRooms = getSortedRooms(devicesByRoom);
 
   return (
     <List isLoading={isLoading} searchBarPlaceholder="Search devices...">
-      {devices.length === 0 && !isLoading ? (
-        <NoDevicesEmptyView onAction={refreshDevices} onOpenPreferences={openExtensionPreferences} />
-      ) : (
-        sortedRooms.map((room) => (
-          <List.Section key={room} title={room}>
-            {devicesByRoom[room].map((device) => (
-              <DeviceItem
-                key={device.device_id}
-                device={device}
-                onToggle={toggleDevice}
-                onRefresh={refreshDevices}
-                onOpenPreferences={openExtensionPreferences}
-              />
-            ))}
-          </List.Section>
-        ))
-      )}
+      {sortedRooms.map((room) => (
+        <List.Section key={room} title={room}>
+          {devicesByRoom[room].map((device) => (
+            <DeviceItem
+              key={device.device_id}
+              device={device}
+              onToggle={toggleDevice}
+              onRefresh={refreshDevices}
+              onOpenPreferences={openExtensionPreferences}
+            />
+          ))}
+        </List.Section>
+      ))}
     </List>
   );
 }
