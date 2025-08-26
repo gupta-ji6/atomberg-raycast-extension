@@ -10,6 +10,7 @@ import {
   showToast,
   Toast,
   useNavigation,
+  Color,
 } from "@raycast/api";
 import { useState } from "react";
 import { QueryClientProvider } from "@tanstack/react-query";
@@ -136,21 +137,21 @@ function DeviceCommandsContent(
         <Detail.Metadata.TagList title="Status">
           <Detail.Metadata.TagList.Item
             text={deviceState.is_online ? "Online" : "Offline"}
-            color={deviceState.is_online ? "#00C853" : "#F44336"}
+            color={deviceState.is_online ? Color.Green : Color.Red}
           />
         </Detail.Metadata.TagList>
 
         <Detail.Metadata.TagList title="Power">
           <Detail.Metadata.TagList.Item
             text={deviceState.power ? "On" : "Off"}
-            color={deviceState.power ? "#00C853" : "#F44336"}
+            color={deviceState.power ? Color.Green : Color.Red}
           />
         </Detail.Metadata.TagList>
 
         <Detail.Metadata.TagList title="Speed">
           <Detail.Metadata.TagList.Item
             text={deviceState.last_recorded_speed === 0 ? "Off" : `Level ${deviceState.last_recorded_speed}`}
-            color={deviceState.last_recorded_speed === 0 ? "#9E9E9E" : "#4CAF50"}
+            color={deviceState.last_recorded_speed === 0 ? Color.SecondaryText : Color.Green}
           />
         </Detail.Metadata.TagList>
 
@@ -175,10 +176,10 @@ function DeviceCommandsContent(
         />
 
         <Detail.Metadata.TagList title="Active Features">
-          {deviceState.sleep_mode && <Detail.Metadata.TagList.Item text="Sleep Mode" color="#9C27B0" />}
-          {deviceState.led && <Detail.Metadata.TagList.Item text="LED" color="#FFC107" />}
+          {deviceState.sleep_mode && <Detail.Metadata.TagList.Item text="Sleep Mode" icon={Icon.Moon} color={Color.Blue} />}
+          {deviceState.led && <Detail.Metadata.TagList.Item text="LED" icon={Icon.LightBulb} color={Color.Purple} />}
           {!deviceState.sleep_mode && !deviceState.led && (
-            <Detail.Metadata.TagList.Item text="None Active" color="#9E9E9E" />
+            <Detail.Metadata.TagList.Item text="None Active" color={Color.SecondaryText} />
           )}
         </Detail.Metadata.TagList>
       </Detail.Metadata>

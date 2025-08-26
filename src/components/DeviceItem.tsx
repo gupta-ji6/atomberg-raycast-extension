@@ -33,12 +33,12 @@ export function DeviceItem({ device, onToggle, onRefresh, onOpenPreferences }: D
       key={device.device_id}
       title={device.name}
       subtitle={`${device.series} ${device.model} • ${device.color}`}
-      accessories={[
+      accessories={device?.metadata?.ssid ? [
         {
           icon: Icon.Wifi,
           tooltip: `Connected to ${device.metadata.ssid}`,
         },
-      ]}
+      ] : undefined}
       icon={Icon.ComputerChip}
       actions={
         <ActionPanel>

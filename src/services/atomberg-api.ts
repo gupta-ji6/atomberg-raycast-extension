@@ -146,14 +146,18 @@ export class AtombergApiService {
    */
   async fetchDevices(): Promise<Device[] | null> {
     try {
-      showToast({ title: "Authenticating", message: "Getting access token..." });
+      showToast({ title: "Authenticating", message: "Getting access token...", style: Toast.Style.Animated });
 
       const accessToken = await this.getValidAccessToken();
       if (!accessToken) {
         return null;
       }
 
-      showToast({ title: "Loading Devices", message: "Fetching your Atomberg devices..." });
+      showToast({
+        title: "Loading Devices...",
+        message: "Fetching your Atomberg devices...",
+        style: Toast.Style.Animated,
+      });
 
       const response = await fetch(`${ATOMBERG_API_BASE_URL}${ENDPOINTS.GET_DEVICES}`, {
         method: "GET",
@@ -179,7 +183,11 @@ export class AtombergApiService {
 
       const devices = data.message.devices_list;
 
-      showToast({ title: "Devices Loaded", message: `Found ${devices.length} devices` });
+      showToast({
+        title: "Devices Loaded",
+        message: `Found ${devices.length} devices`,
+        style: Toast.Style.Success,
+      });
       return devices;
     } catch (error) {
       console.error("Error fetching devices:", error);
@@ -231,8 +239,9 @@ export class AtombergApiService {
       console.log("Command payload:", commandPayload);
 
       showToast({
-        title: "Controlling Device",
+        title: "Controlling Device...",
         message: `Sending ${commandDescription} to ${device.name}`,
+        style: Toast.Style.Animated,
       });
 
       const response = await fetch(`${ATOMBERG_API_BASE_URL}${ENDPOINTS.SEND_COMMAND}`, {
@@ -257,6 +266,7 @@ export class AtombergApiService {
       showToast({
         title: "Command Sent",
         message: `Successfully sent ${commandDescription} to ${device.name}`,
+        style: Toast.Style.Success,
       });
 
       return true;

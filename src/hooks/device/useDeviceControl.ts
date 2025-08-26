@@ -53,6 +53,7 @@ export function useDeviceControl(preferences: Preferences) {
       showToast({
         title: "Executing Command",
         message: `Controlling ${device.name} - ${commandName}`,
+        style: Toast.Style.Animated,
       });
     },
     onSuccess: async (
@@ -72,6 +73,7 @@ export function useDeviceControl(preferences: Preferences) {
         showToast({
           title: "Command Executed",
           message: `Successfully executed ${commandName} on ${device.name}`,
+          style: Toast.Style.Success,
         });
 
         // Invalidate and refetch device state after a short delay to ensure API state is updated

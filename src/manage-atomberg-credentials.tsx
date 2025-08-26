@@ -90,7 +90,7 @@ function CredentialsContent() {
         return;
       }
 
-      showToast({ title: "Testing Credentials", message: "Validating your API credentials..." });
+      showToast({ title: "Testing Credentials", message: "Validating your API credentials...", style: Toast.Style.Animated });
 
       const apiService = apiServiceManager.getApiService(preferences);
       const now = new Date().toLocaleString();
@@ -102,6 +102,7 @@ function CredentialsContent() {
         showToast({
           title: "Valid Credentials",
           message: "Authentication successful. Token expires in 24 hours.",
+          style: Toast.Style.Success,
         });
       }
     } catch (error) {
