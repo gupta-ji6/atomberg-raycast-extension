@@ -13,7 +13,7 @@ export interface DeviceCapabilities {
 // Device capability mapping based on model and series from API documentation
 const DEVICE_CAPABILITIES: Record<string, DeviceCapabilities> = {
   // Renesa series
-  "Renesa-R1": {
+  renesa_r1: {
     power: true,
     speed: true,
     sleep: true,
@@ -24,7 +24,7 @@ const DEVICE_CAPABILITIES: Record<string, DeviceCapabilities> = {
   },
 
   // Renesa Halo series
-  "Renesa Halo-R1": {
+  renesa_halo_r1: {
     power: true,
     speed: true,
     sleep: true,
@@ -33,7 +33,7 @@ const DEVICE_CAPABILITIES: Record<string, DeviceCapabilities> = {
     brightness: false,
     color: false,
   },
-  "Renesa Halo-R2": {
+  renesa_halo_r2: {
     power: true,
     speed: true,
     sleep: true,
@@ -44,7 +44,7 @@ const DEVICE_CAPABILITIES: Record<string, DeviceCapabilities> = {
   },
 
   // Renesa+ series
-  "Renesa+-R1": {
+  "renesa+_r1": {
     power: true,
     speed: true,
     sleep: true,
@@ -54,8 +54,7 @@ const DEVICE_CAPABILITIES: Record<string, DeviceCapabilities> = {
     color: false,
   },
 
-  // Studio+ series
-  "Studio+-R1": {
+  "studio+_r1": {
     power: true,
     speed: true,
     sleep: true,
@@ -66,7 +65,7 @@ const DEVICE_CAPABILITIES: Record<string, DeviceCapabilities> = {
   },
 
   // Erica series
-  "Erica-K1": {
+  erica_k1: {
     power: true,
     speed: true,
     sleep: true,
@@ -77,7 +76,7 @@ const DEVICE_CAPABILITIES: Record<string, DeviceCapabilities> = {
   },
 
   // Aris Starlight I1 series (ONLY model supporting both brightness AND color)
-  "Aris Starlight-I1": {
+  aris_starlight_i1: {
     power: true,
     speed: true,
     sleep: true,
@@ -88,7 +87,7 @@ const DEVICE_CAPABILITIES: Record<string, DeviceCapabilities> = {
   },
 
   // Aris I2 series (basic features only)
-  "Aris-I2": {
+  aris_i2: {
     power: true,
     speed: true,
     sleep: true,
@@ -99,7 +98,7 @@ const DEVICE_CAPABILITIES: Record<string, DeviceCapabilities> = {
   },
 
   // Aris Contour M1 series (supports brightness change only)
-  "Aris Contour-M1": {
+  aris_contour_m1: {
     power: true,
     speed: true,
     sleep: true,
@@ -110,7 +109,7 @@ const DEVICE_CAPABILITIES: Record<string, DeviceCapabilities> = {
   },
 
   // Renesa Elite S1 series (supports brightness change only)
-  "Renesa Elite-S1": {
+  renesa_elite_s1: {
     power: true,
     speed: true,
     sleep: true,
@@ -121,7 +120,7 @@ const DEVICE_CAPABILITIES: Record<string, DeviceCapabilities> = {
   },
 
   // Studio Nexus S1 series (supports brightness change only)
-  "Studio Nexus-S1": {
+  studio_nexus_s1: {
     power: true,
     speed: true,
     sleep: true,
@@ -144,8 +143,34 @@ const DEFAULT_CAPABILITIES: DeviceCapabilities = {
 };
 
 export function getDeviceCapabilities(device: Device): DeviceCapabilities {
-  const modelKey = `${device.model}-${device.series}`;
-  return DEVICE_CAPABILITIES[modelKey] || DEFAULT_CAPABILITIES;
+  // Convert API response to lowercase and use underscores for consistency
+  const normalizedModel = device.model.toLowerCase();
+  const normalizedSeries = device.series.toLowerCase();
+  const exactKey = `${normalizedModel}_${normalizedSeries}`;
+
+  // Try exact match first
+  if (DEVICE_CAPABILITIES[exactKey]) {
+    return DEVICE_CAPABILITIES[exactKey];
+  }
+
+  // Try case-insensitive match as fallback
+  const caseInsensitiveKey = Object.keys(DEVICE_CAPABILITIES).find(
+    (key) => key.toLowerCase() === exactKey.toLowerCase(),
+  );
+  if (caseInsensitiveKey) {
+    return DEVICE_CAPABILITIES[caseInsensitiveKey];
+  }
+
+  // Try partial match by series only (fallback for unknown models)
+  const seriesOnlyKey = Object.keys(DEVICE_CAPABILITIES).find((key) =>
+    key.toLowerCase().endsWith(`_${normalizedSeries}`),
+  );
+  if (seriesOnlyKey) {
+    console.log(`Using series-based fallback for ${device.model} ${device.series}: ${seriesOnlyKey}`);
+    return DEVICE_CAPABILITIES[seriesOnlyKey];
+  }
+
+  return DEFAULT_CAPABILITIES;
 }
 
 export function hasCapability(device: Device, capability: keyof DeviceCapabilities): boolean {
