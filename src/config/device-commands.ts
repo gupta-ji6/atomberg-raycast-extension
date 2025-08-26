@@ -1,7 +1,28 @@
 import type { DeviceCommandDefinition, DeviceCommandType, Device } from "../types";
 import { hasCapability, type DeviceCapabilities } from "./device-capabilities";
 
+/**
+ * Complete list of available device commands for Atomberg devices
+ *
+ * Each command definition includes:
+ * - id: Unique identifier for the command
+ * - title: Human-readable title for UI display
+ * - subtitle: Brief description of the action
+ * - icon: Icon identifier for UI representation
+ * - command: API command string sent to the device
+ * - description: Detailed description of what the command does
+ * - requiredCapability: Device capability required to use this command
+ * - parameters: Optional parameters for commands that need user input
+ *
+ * Commands are organized by functionality:
+ * - Power control (power-toggle)
+ * - Speed control (speed-up, speed-down, set-speed)
+ * - Sleep mode (sleep-mode)
+ * - LED control (led-toggle, brightness controls, color control)
+ * - Timer functions (various timer presets and custom timer)
+ */
 export const DEVICE_COMMANDS: DeviceCommandDefinition[] = [
+  // Power control commands
   {
     id: "power-toggle",
     title: "Toggle Power",
@@ -11,6 +32,8 @@ export const DEVICE_COMMANDS: DeviceCommandDefinition[] = [
     description: "Toggle the power state of the device",
     requiredCapability: "power",
   },
+
+  // Speed control commands
   {
     id: "speed-up",
     title: "Increase Speed",
@@ -46,6 +69,8 @@ export const DEVICE_COMMANDS: DeviceCommandDefinition[] = [
       },
     },
   },
+
+  // Sleep mode command
   {
     id: "sleep-mode",
     title: "Toggle Sleep Mode",
@@ -55,6 +80,8 @@ export const DEVICE_COMMANDS: DeviceCommandDefinition[] = [
     description: "Toggle sleep mode for quieter operation",
     requiredCapability: "sleep",
   },
+
+  // LED control commands
   {
     id: "led-toggle",
     title: "Toggle LED",
@@ -64,6 +91,8 @@ export const DEVICE_COMMANDS: DeviceCommandDefinition[] = [
     description: "Toggle the LED indicators on the device",
     requiredCapability: "led",
   },
+
+  // Timer commands - Preset timers
   {
     id: "timer-1h",
     title: "Set 1 Hour Timer",
@@ -100,6 +129,8 @@ export const DEVICE_COMMANDS: DeviceCommandDefinition[] = [
     description: "Set device to automatically turn off after 6 hours",
     requiredCapability: "timer",
   },
+
+  // Timer commands - Custom and control
   {
     id: "set-timer",
     title: "Set Custom Timer",
@@ -126,6 +157,8 @@ export const DEVICE_COMMANDS: DeviceCommandDefinition[] = [
     description: "Cancel any currently active timer",
     requiredCapability: "timer",
   },
+
+  // Brightness control commands
   {
     id: "brightness-up",
     title: "Increase Brightness",
@@ -178,6 +211,8 @@ export const DEVICE_COMMANDS: DeviceCommandDefinition[] = [
       },
     },
   },
+
+  // Color control command
   {
     id: "set-color",
     title: "Set LED Color",
@@ -196,31 +231,73 @@ export const DEVICE_COMMANDS: DeviceCommandDefinition[] = [
   },
 ];
 
+/**
+ * Retrieves a device command definition by its unique identifier
+ *
+ * @param id - The unique identifier of the command to find
+ * @returns The command definition if found, undefined otherwise
+ */
 export const getCommandById = (id: string): DeviceCommandDefinition | undefined => {
   return DEVICE_COMMANDS.find((cmd) => cmd.id === id);
 };
 
+/**
+ * Retrieves all device commands that match a specific command type
+ *
+ * @param commandType - The command type to filter by (e.g., "toggle", "set_speed")
+ * @returns Array of command definitions matching the specified type
+ */
 export const getCommandsByType = (commandType: DeviceCommandType): DeviceCommandDefinition[] => {
   return DEVICE_COMMANDS.filter((cmd) => cmd.command === commandType);
 };
 
+/**
+ * Retrieves all simple commands that don't require parameters
+ *
+ * @returns Array of command definitions without parameters
+ */
 export const getSimpleCommands = (): DeviceCommandDefinition[] => {
   return DEVICE_COMMANDS.filter((cmd) => !cmd.parameters);
 };
 
+/**
+ * Retrieves all commands that require user input parameters
+ *
+ * @returns Array of command definitions that have parameters
+ */
 export const getParametrizedCommands = (): DeviceCommandDefinition[] => {
   return DEVICE_COMMANDS.filter((cmd) => cmd.parameters);
 };
 
+/**
+ * Retrieves all commands available for a specific device based on its capabilities
+ *
+ * This function filters the command list to only include commands that the device
+ * can actually execute based on its hardware capabilities.
+ *
+ * @param device - The device to get available commands for
+ * @returns Array of command definitions that the device supports
+ */
 export const getAvailableCommandsForDevice = (device: Device): DeviceCommandDefinition[] => {
   return DEVICE_COMMANDS.filter((cmd) => {
+    // If no capability is required, the command is always available
     if (!cmd.requiredCapability) return true;
+    // Check if the device supports the required capability
     return hasCapability(device, cmd.requiredCapability as keyof DeviceCapabilities);
   });
 };
 
+/**
+ * Checks if a specific command is available for a given device
+ *
+ * @param device - The device to check command availability for
+ * @param commandId - The unique identifier of the command to check
+ * @returns true if the command is available for the device, false otherwise
+ */
 export const isCommandAvailableForDevice = (device: Device, commandId: string): boolean => {
   const command = getCommandById(commandId);
+  // If command doesn't exist or has no capability requirement, it's available
   if (!command || !command.requiredCapability) return true;
+  // Check if the device supports the required capability
   return hasCapability(device, command.requiredCapability as keyof DeviceCapabilities);
 };

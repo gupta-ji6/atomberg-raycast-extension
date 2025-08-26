@@ -18,9 +18,39 @@ import type {
   CommandParameters,
 } from "../types";
 
+/**
+ * Main service class for interacting with the Atomberg API
+ *
+ * This class provides comprehensive functionality for authenticating with the
+ * Atomberg API, managing access tokens, controlling devices, and fetching
+ * device states. It handles token lifecycle management, command payload
+ * construction, and user feedback through toast notifications.
+ *
+ * @remarks
+ * - Manages access token lifecycle with automatic refresh
+ * - Provides comprehensive device control with parameter validation
+ * - Includes user feedback through toast notifications
+ * - Handles API errors gracefully with fallback strategies
+ * - Supports both simple commands and parameterized operations
+ */
 export class AtombergApiService {
+  /**
+   * Creates a new AtombergApiService instance
+   *
+   * @param preferences - User preferences containing API credentials
+   */
   constructor(private preferences: Preferences) {}
 
+  /**
+   * Fetches a new access token from the Atomberg API
+   *
+   * This method authenticates with the API using the refresh token and API key,
+   * then stores the new access token in local storage with expiration tracking.
+   *
+   * @returns Promise resolving to the access token string or null if failed
+   *
+   * @throws Error when authentication fails or response format is invalid
+   */
   async getAccessToken(): Promise<string | null> {
     try {
       const endpoint = `${ATOMBERG_API_BASE_URL}${ENDPOINTS.GET_ACCESS_TOKEN}`;
@@ -71,6 +101,16 @@ export class AtombergApiService {
     }
   }
 
+  /**
+   * Gets a valid access token, either from cache or by fetching a new one
+   *
+   * This method implements intelligent token management by checking if a
+   * cached token is still valid before making a new API request. It includes
+   * a buffer time to ensure tokens are refreshed before they expire.
+   *
+   * @returns Promise resolving to a valid access token or null if failed
+   *
+   */
   async getValidAccessToken(): Promise<string | null> {
     try {
       const storedToken = await LocalStorage.getItem<string>(STORAGE_KEYS.ACCESS_TOKEN);
@@ -92,6 +132,18 @@ export class AtombergApiService {
     }
   }
 
+  /**
+   * Fetches the list of Atomberg devices for the authenticated user
+   *
+   * This method authenticates with the API and retrieves all devices
+   * associated with the user's account. It provides user feedback through
+   * toast notifications during the process.
+   *
+   * @returns Promise resolving to array of devices or null if failed
+   *
+   * @throws Error when API request fails or response format is invalid
+   *
+   */
   async fetchDevices(): Promise<Device[] | null> {
     try {
       showToast({ title: "Authenticating", message: "Getting access token..." });
@@ -119,7 +171,7 @@ export class AtombergApiService {
       }
 
       const data = (await response.json()) as AtombergApiResponse;
-      console.log("Device list response:", data);
+      console.log("Device list response:", JSON.stringify(data, null, 2));
 
       if (data.status !== "Success" || !data.message?.devices_list) {
         throw new Error("Failed to fetch devices - invalid response format");
@@ -141,6 +193,21 @@ export class AtombergApiService {
     }
   }
 
+  /**
+   * Sends a control command to a specific device
+   *
+   * This method handles device control operations by building the appropriate
+   * command payload and sending it to the API. It supports both simple commands
+   * and parameterized operations with automatic payload construction.
+   *
+   * @param device - The device to control
+   * @param command - The command to execute (string or DeviceCommand object)
+   * @param deviceState - Optional current device state for state-dependent commands
+   * @param parameters - Optional parameters for parameterized commands
+   * @returns Promise resolving to boolean indicating success or failure
+   *
+   * @throws Error when command execution fails or payload construction fails
+   */
   async controlDevice(
     device: Device,
     command: string | DeviceCommand,
@@ -204,6 +271,23 @@ export class AtombergApiService {
     }
   }
 
+  /**
+   * Builds the command payload for API requests
+   *
+   * This private method constructs the appropriate payload structure for
+   * different types of commands. It handles both simple commands and
+   * parameterized operations with validation.
+   *
+   * @param command - The command to execute
+   * @param deviceId - The ID of the target device
+   * @param deviceState - Optional current device state for state-dependent commands
+   * @param parameters - Optional parameters for parameterized commands
+   * @returns Properly formatted command payload for the API
+   *
+   * @throws Error when required parameters are missing or command is unknown
+   *
+   * @private
+   */
   private buildCommandPayload(
     command: string | DeviceCommand,
     deviceId: string,
@@ -295,6 +379,17 @@ export class AtombergApiService {
     }
   }
 
+  /**
+   * Generates a human-readable description of a command payload
+   *
+   * This private method converts the technical command payload into
+   * user-friendly descriptions for toast notifications and logging.
+   *
+   * @param payload - The command payload to describe
+   * @returns Human-readable description of the command
+   *
+   * @private
+   */
   private getCommandDescription(payload: {
     device_id: string;
     command: Record<string, string | number | boolean>;
@@ -323,6 +418,18 @@ export class AtombergApiService {
     return "command";
   }
 
+  /**
+   * Fetches the current state of a specific device
+   *
+   * This method retrieves the real-time state information for a device,
+   * including power status, speed, sleep mode, LED state, and other
+   * device-specific properties.
+   *
+   * @param deviceId - The unique identifier of the device
+   * @returns Promise resolving to device state object or null if failed
+   *
+   * @throws Error when API request fails or response format is invalid
+   */
   async fetchDeviceState(deviceId: string): Promise<DeviceState | null> {
     try {
       const accessToken = await this.getValidAccessToken();

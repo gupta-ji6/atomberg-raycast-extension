@@ -9,7 +9,6 @@ import {
   LaunchProps,
   showToast,
   Toast,
-  Form,
   useNavigation,
 } from "@raycast/api";
 import { useState } from "react";
@@ -20,84 +19,14 @@ import { hasValidCredentials } from "./utils/device-utils";
 import { getIconFromString } from "./utils/icon-utils";
 import type { Preferences, Device, DeviceCommandDefinition, CommandParameters } from "./types";
 import { getAvailableCommandsForDevice, getCommandById } from "./config/device-commands";
+import { SetTimerForm } from "./components/SetTimerForm";
+import { SetSpeedForm } from "./components/SetSpeedForm";
 
 interface DeviceCommandsArguments {
   deviceId: string;
   deviceName: string;
   deviceModel?: string;
   deviceSeries?: string;
-}
-
-interface SetSpeedFormProps {
-  deviceName: string;
-  onSubmit: (values: { speedLevel: string }) => void;
-}
-
-interface SetTimerFormProps {
-  deviceName: string;
-  onSubmit: (values: { timerHours: string }) => void;
-}
-
-function SetSpeedForm({ deviceName, onSubmit }: SetSpeedFormProps) {
-  const { pop } = useNavigation();
-
-  return (
-    <Form
-      navigationTitle={`Set Speed Level - ${deviceName}`}
-      actions={
-        <ActionPanel>
-          <Action.SubmitForm
-            title="Set Speed"
-            icon={Icon.Gauge}
-            onSubmit={(values) => {
-              onSubmit(values as { speedLevel: string });
-              pop();
-            }}
-          />
-          <Action title="Cancel" icon={Icon.XMarkCircle} onAction={pop} />
-        </ActionPanel>
-      }
-    >
-      <Form.Dropdown id="speedLevel" title="Speed Level" placeholder="Select speed level">
-        <Form.Dropdown.Item value="1" title="Level 1 (Lowest)" icon={Icon.Gauge} />
-        <Form.Dropdown.Item value="2" title="Level 2" icon={Icon.Gauge} />
-        <Form.Dropdown.Item value="3" title="Level 3" icon={Icon.Gauge} />
-        <Form.Dropdown.Item value="4" title="Level 4" icon={Icon.Gauge} />
-        <Form.Dropdown.Item value="5" title="Level 5" icon={Icon.Gauge} />
-        <Form.Dropdown.Item value="6" title="Level 6 (Highest)" icon={Icon.Gauge} />
-      </Form.Dropdown>
-    </Form>
-  );
-}
-
-function SetTimerForm({ deviceName, onSubmit }: SetTimerFormProps) {
-  const { pop } = useNavigation();
-
-  return (
-    <Form
-      navigationTitle={`Set Custom Timer - ${deviceName}`}
-      actions={
-        <ActionPanel>
-          <Action.SubmitForm
-            title="Set Timer"
-            icon={Icon.Timer}
-            onSubmit={(values) => {
-              onSubmit(values as { timerHours: string });
-              pop();
-            }}
-          />
-          <Action title="Cancel" icon={Icon.XMarkCircle} onAction={pop} />
-        </ActionPanel>
-      }
-    >
-      <Form.Dropdown id="timerHours" title="Timer Duration" placeholder="Select timer duration">
-        <Form.Dropdown.Item value="1" title="1 Hour" icon={Icon.Clock} />
-        <Form.Dropdown.Item value="2" title="2 Hours" icon={Icon.Clock} />
-        <Form.Dropdown.Item value="3" title="3 Hours" icon={Icon.Clock} />
-        <Form.Dropdown.Item value="4" title="4 Hours" icon={Icon.Clock} />
-      </Form.Dropdown>
-    </Form>
-  );
 }
 
 function DeviceCommandsContent(

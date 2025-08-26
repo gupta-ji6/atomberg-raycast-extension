@@ -1,5 +1,11 @@
 import { Icon } from "@raycast/api";
 
+/**
+ * Mapping of icon string identifiers to Raycast Icon components
+ *
+ * Provides a centralized mapping for converting string-based icon names
+ * to actual Raycast Icon components used throughout the application.
+ */
 export const iconMap: Record<string, Icon> = {
   power: Icon.Power,
   plus: Icon.Plus,
@@ -15,6 +21,12 @@ export const iconMap: Record<string, Icon> = {
   palette: Icon.Circle,
 };
 
+/**
+ * Retrieves the appropriate Raycast Icon component from a string identifier
+ *
+ * @param iconString - String identifier for the icon
+ * @returns Raycast Icon component, defaults to Icon.Dot if not found
+ */
 export const getIconFromString = (iconString: string): Icon => {
   return iconMap[iconString] || Icon.Dot;
 };

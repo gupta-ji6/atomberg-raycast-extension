@@ -3,6 +3,24 @@ import { apiServiceManager } from "../../services/api-service";
 import { queryKeys } from "../../lib/query-client";
 import type { Preferences } from "../../types";
 
+/**
+ * Custom hook for managing individual device state with real-time updates
+ *
+ * This hook provides real-time device state management with intelligent
+ * caching, background refetching, and focus-based updates. It's optimized
+ * for devices that need frequent state monitoring.
+ *
+ * @param deviceId - Unique identifier of the device to monitor
+ * @param preferences - User preferences containing API credentials
+ * @returns Object containing device state, loading states, and refresh functions
+ *
+ * @remarks
+ * - Only enabled when device ID and credentials are provided
+ * - State is considered stale after 10 seconds for real-time accuracy
+ * - Automatically refetches every 30 seconds in the background
+ * - Refetches when window gains focus for up-to-date information
+ * - Optimized for devices that need frequent state monitoring
+ */
 export function useDeviceState(deviceId: string, preferences: Preferences) {
   const apiService = apiServiceManager.getApiService(preferences);
 

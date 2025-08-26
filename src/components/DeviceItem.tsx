@@ -2,13 +2,31 @@ import { List, ActionPanel, Action, Icon } from "@raycast/api";
 import DeviceCommands from "../device-commands";
 import type { Device } from "../types";
 
+/**
+ * Props interface for the DeviceItem component
+ */
 interface DeviceItemProps {
+  /** The device object containing device information */
   device: Device;
+  /** Callback function to toggle device state */
   onToggle: (device: Device) => void;
+  /** Callback function to refresh the devices list */
   onRefresh: () => void;
+  /** Callback function to open extension preferences */
   onOpenPreferences: () => void;
 }
 
+/**
+ * DeviceItem component that renders a single device in the devices list
+ * 
+ * @param props - The component props
+ * @param props.device - The device object containing device information
+ * @param props.onToggle - Callback function to toggle device state
+ * @param props.onRefresh - Callback function to refresh the devices list
+ * @param props.onOpenPreferences - Callback function to open extension preferences
+ * 
+ * @returns A List.Item component representing the device with actions
+ */
 export function DeviceItem({ device, onToggle, onRefresh, onOpenPreferences }: DeviceItemProps) {
   return (
     <List.Item

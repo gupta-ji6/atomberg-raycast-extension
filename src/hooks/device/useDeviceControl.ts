@@ -4,6 +4,23 @@ import { apiServiceManager } from "../../services/api-service";
 import { queryKeys } from "../../lib/query-client";
 import type { Device, Preferences, DeviceCommand, DeviceState, CommandParameters } from "../../types";
 
+/**
+ * Custom hook for controlling Atomberg devices with comprehensive state management
+ *
+ * This hook provides device control functionality with automatic state updates,
+ * user feedback through toast notifications, and intelligent query invalidation.
+ * It handles both simple commands and complex parameterized operations.
+ *
+ * @param preferences - User preferences containing API credentials
+ * @returns React Query mutation object with device control functionality
+ *
+ * @remarks
+ * - Automatically shows toast notifications for command execution status
+ * - Invalidates and refetches device state after successful commands
+ * - Includes a 1-second delay before refetching to ensure API state updates
+ * - Provides comprehensive error handling with user-friendly messages
+ * - Integrates with React Query for automatic state management
+ */
 export function useDeviceControl(preferences: Preferences) {
   const queryClient = useQueryClient();
   const apiService = apiServiceManager.getApiService(preferences);
@@ -31,6 +48,7 @@ export function useDeviceControl(preferences: Preferences) {
       deviceState?: DeviceState;
       parameters?: CommandParameters;
     }) => {
+      // Show immediate feedback that command execution has started
       const commandName = typeof command === "string" ? command : command.command;
       showToast({
         title: "Executing Command",
@@ -62,6 +80,7 @@ export function useDeviceControl(preferences: Preferences) {
         });
 
         // Force refetch after 1 second to ensure we get the updated state
+        // This delay accounts for potential API latency in updating device state
         setTimeout(() => {
           queryClient.refetchQueries({
             queryKey: queryKeys.deviceState(device.device_id, preferences),
