@@ -5,6 +5,14 @@ Control your Atomberg smart appliances directly from Raycast with ease and secur
 > [!NOTE]
 > This is an unofficial extension not affiliated with Atomberg Technologies.
 
+![Atomberg Device Screenshot 1](./metadata/atomberg-1.png)
+
+![Atomberg Device Screenshot 2](./metadata/atomberg-2.png)
+
+![Atomberg Device Screenshot 3](./metadata/atomberg-3.png)
+
+![Atomberg Device Screenshot 4](./metadata/atomberg-4.png)
+
 ## Features
 
 - **Device Management**: View and control all your Atomberg smart fans and appliances
