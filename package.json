@@ -43,8 +43,7 @@
     }
   ],
   "categories": [
-    "Productivity",
-    "Smart Home"
+    "Productivity"
   ],
   "dependencies": {
     "@raycast/api": "^1.102.5",
