@@ -5,10 +5,9 @@ import { DeviceItem } from "./components/DeviceItem";
 import { CredentialsRequiredEmptyView, NoDevicesEmptyView } from "./components/EmptyStates";
 import { useAtombergDevices } from "./hooks";
 import { groupDevicesByRoom, getSortedRooms, hasValidCredentials } from "./utils/device-utils";
-import type { Preferences } from "./types";
 
 function DeviceListContent() {
-  const preferences = getPreferenceValues<Preferences>();
+  const preferences = getPreferenceValues();
   const { devices, isLoading, refreshDevices, toggleDevice } = useAtombergDevices(preferences);
 
   const credentialsValid = hasValidCredentials(preferences.apiKey, preferences.refreshToken);
