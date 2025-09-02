@@ -1,4 +1,9 @@
+> [!IMPORTANT]
+> This repository is now archived, since the PR for this extension was merged on main repo & it's source code now lives here - [raycast/extensions/atomberg-raycast-extension](https://github.com/raycast/extensions/tree/main/extensions/atomberg-raycast-extension)
+
 # Atomberg Smart Home
+
+<a title="Install atomberg-raycast-extension Raycast Extension" href="https://www.raycast.com/gupta_ji/atomberg-raycast-extension"><img src="https://www.raycast.com/gupta_ji/atomberg-raycast-extension/install_button@2x.png?v=1.1" height="64" alt="" style="height: 64px;"></a>
 
 Control your Atomberg smart appliances directly from Raycast with ease and security.
 
